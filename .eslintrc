@@ -1,0 +1,22 @@
+{
+    "extends": [
+        "airbnb-typescript/base",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "prettier"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "project": "./tsconfig.json"
+    },
+    "rules": {
+        "@typescript-eslint/explicit-module-boundary-types": "off",
+        "@typescript-eslint/no-floating-promises": "off",
+        "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_"}],
+        "import/prefer-default-export": "off",
+        "import/extensions": "off",
+        "class-methods-use-this": "off",
+        "max-classes-per-file": "off",
+        "@typescript-eslint/lines-between-class-members": "off"
+    }
+}
