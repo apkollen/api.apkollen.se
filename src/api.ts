@@ -1,8 +1,8 @@
 import { Knex } from 'knex';
 import db from './db';
-import { DatabaseProductResponse, DatabaseProductReviewResponse } from './models/db';
+import { DatabaseProductHistoryEntry, DatabaseProductReviewResponse } from './models/db';
 import { ProductRequest, SortableProductRequestKey } from './models/req';
-import { ProductResponse, ProductReviewResponse } from './models/res';
+import { ProductHistoryEntryResponse, ProductReviewResponse } from './models/res';
 
 const PRODUCT_HISTORY_TABLE = 'bs_product_history_entry';
 const DEAD_LINK_TABLE = 'dead_bs_product';
@@ -26,8 +26,8 @@ const addIntervalQuery = <T>(
   }
 };
 
-export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]> => {
-  const query = db.queryBuilder<DatabaseProductResponse>();
+export const getProducts = async (pr: ProductRequest): Promise<ProductHistoryEntryResponse[]> => {
+  const query = db.queryBuilder<DatabaseProductHistoryEntry>();
 
   // First we create CTE with all products to query from, i.e. either newest or in an interval
   if (pr.onlyNewest) {
@@ -142,18 +142,20 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
     query.offset(pr.offset);
   }
 
-  const resRows = (await query) as DatabaseProductResponse[];
-  const res = resRows.map((dbpr: DatabaseProductResponse): ProductResponse => {
+  const resRows = (await query) as DatabaseProductHistoryEntry[];
+  const res = resRows.map((dbpr: DatabaseProductHistoryEntry): ProductHistoryEntryResponse => {
     let markedAsDead = false;
     if (dbpr.markedAsDeadTimestamp != null) {
       // If we have a timestamp for when marked as dead, it IS marked as dead!
       markedAsDead = true;
     }
 
+    const { retrievedTimestamp, ...reduced } = dbpr;
+
     return {
-      ...dbpr,
+      ...reduced,
       markedAsDead,
-      retrievedDate: new Date(dbpr.retreivedTimestamp),
+      retrievedDate: new Date(retrievedTimestamp),
       markedAsDeadDate:
         dbpr.markedAsDeadTimestamp != null ? new Date(dbpr.markedAsDeadTimestamp) : undefined,
     };

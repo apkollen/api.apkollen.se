@@ -1,11 +1,11 @@
-import type { ProductResponse, ProductReviewResponse } from './res';
+import type { ProductHistoryEntryResponse, ProductReviewResponse } from './res';
 
-export type DatabaseProductResponse = Omit<
-  ProductResponse,
+export type DatabaseProductHistoryEntry = Omit<
+  ProductHistoryEntryResponse,
   'retrievedDate' | 'markedAsDeadDate' | 'markedAsDead'
 > & {
   // ISO timestamp
-  retreivedTimestamp: number;
+  retrievedTimestamp: number;
   markedAsDeadTimestamp?: number;
 };
 

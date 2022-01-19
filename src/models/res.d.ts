@@ -1,4 +1,4 @@
-export type ProductResponse = {
+export type ProductHistoryEntryResponse = {
   url: string;
   productName: string;
   category: string;

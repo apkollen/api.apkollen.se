@@ -8,7 +8,7 @@ import {
   getProductCurrentRank,
   getProductCurrentCount,
 } from './api';
-import { ProductResponse } from './models/res';
+import { ProductHistoryEntryResponse } from './models/res';
 
 console.log('Starting startup...');
 
@@ -22,7 +22,7 @@ app.use(
 
 app.post('/bs/products', async (req, res) => {
   const pr: ProductRequest = req.query;
-  let rp: ProductResponse[];
+  let rp: ProductHistoryEntryResponse[];
 
   try {
     rp = await getProducts(pr);
