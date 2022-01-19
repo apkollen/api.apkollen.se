@@ -9,8 +9,6 @@
   },
   "dependencies": {
     "better-sqlite3": "^7.4.6",
-    "camelcase": "^6.3.0",
-    "decamelize": "^6.0.0",
     "express": "^4.17.2",
     "knex": "^1.0.1",
     "prettier": "^2.5.1"
