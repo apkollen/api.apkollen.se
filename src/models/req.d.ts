@@ -21,7 +21,7 @@ export type ProductRequest = {
     max?: number;
   };
   articleNbr?: number[];
-  onlyNewest?: boolean
+  onlyNewest?: boolean;
   retrievedDate?: {
     start?: Date;
     end?: Date;
@@ -41,4 +41,4 @@ export type SubcategoryRequest = {
 
 export type ReviewRequest = {
   articleNbr: number[];
-}
+};

@@ -124,7 +124,11 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
   } else {
     // Add marked as dead dates, also indicates if something has been marked as dead
     // outer here means if not found in dead links, mark as NULL
-    query.leftOuterJoin(DEAD_LINK_TABLE, 'bs_product.article_nbr', 'dead_bs_product.bs_product_article_nbr')
+    query.leftOuterJoin(
+      DEAD_LINK_TABLE,
+      'bs_product.article_nbr',
+      'dead_bs_product.bs_product_article_nbr',
+    );
   }
 
   // Add reviews, outer means "If not there, insert null"
@@ -156,13 +160,14 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
       // If we have a timestamp for when marked as dead, it IS marked as dead!
       markedAsDead = true;
     }
-    
+
     return {
       ...dbpr,
       markedAsDead,
       retrievedDate: new Date(dbpr.retreivedTimestamp),
-      markedAsDeadDate: dbpr.markedAsDeadTimestamp != null ? new Date(dbpr.markedAsDeadTimestamp) : undefined,
-    }
+      markedAsDeadDate:
+        dbpr.markedAsDeadTimestamp != null ? new Date(dbpr.markedAsDeadTimestamp) : undefined,
+    };
   });
 
   return res;
@@ -170,4 +175,4 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
 
 export const getAllCategories = async (): Promise<string[]> => {
   return db<string[]>(PRODUCT_TABLE).distinct('category');
-}
+};

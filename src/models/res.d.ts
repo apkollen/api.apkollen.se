@@ -1,5 +1,5 @@
 export type ProductResponse = {
-  url: string,
+  url: string;
   productName: string;
   category: string;
   subcategory: string;
@@ -12,7 +12,7 @@ export type ProductResponse = {
   retrievedDate: Date;
   markedAsDead: boolean;
   markedAsDeadDate?: Date;
-  reviewScore?: number,
+  reviewScore?: number;
 };
 
 export type ProductReviewResponse = {
