@@ -1,4 +1,4 @@
-import type { DatabaseProduct } from './db';
+export type SortableProductRequestKey = keyof Omit<ProductRequest, 'onlyNewest' | 'includeMarkedAsDead' | 'sortOrder' | 'maxItems' | 'offset'>
 
 export type ProductRequest = {
   productName?: string[];
@@ -28,7 +28,7 @@ export type ProductRequest = {
   };
   includeMarkedAsDead?: boolean;
   sortOrder?: {
-    key: keyof DatabaseProduct;
+    key: SortableProductRequestKey;
     order: 'asc' | 'desc';
   };
   maxItems?: number;

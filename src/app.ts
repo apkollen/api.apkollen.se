@@ -43,7 +43,7 @@ app.post('/bs/products', async (req, res) => {
 });
 
 app.get('/bs/products/history/:articleNbr', async (req, res) => {
-  try {
+  // try {
     const articleNbr: number = Number.parseInt(req.params.articleNbr);
     const history = await getProducts({
       articleNbr: [articleNbr],
@@ -55,9 +55,9 @@ app.get('/bs/products/history/:articleNbr', async (req, res) => {
       },
     });
     res.send(history);
-  } catch (err) {
-    res.sendStatus(400);
-  }
+  // } catch (err) {
+  //   res.sendStatus(400);
+  // }
 });
 
 app.get('/bs/products/review/:articleNbr', async (req, res) => {
@@ -66,7 +66,7 @@ app.get('/bs/products/review/:articleNbr', async (req, res) => {
     const review = await getProductReview(articleNbr);
     res.send(review);
   } catch (err) {
-    res.sendStatus(400);
+   res.sendStatus(400);
   }
 });
 
@@ -74,7 +74,7 @@ app.get('/bs/products/current-rank/:articleNbr', async (req, res) => {
   try {
     const articleNbr: number = Number.parseInt(req.params.articleNbr);
     const rank = await getProductCurrentRank(articleNbr);
-    res.send(rank);
+    res.send([rank]);
   } catch (err) {
     res.sendStatus(400);
   }
@@ -83,7 +83,7 @@ app.get('/bs/products/current-rank/:articleNbr', async (req, res) => {
 app.get('/bs/products/current-count', async (_, res) => {
   try {
     const count = await getProductCurrentCount();
-    res.send(count);
+    res.send([count]);
   } catch (err) {
     res.sendStatus(500);
   }
@@ -98,3 +98,5 @@ app.get('/bs/categories', async (_, res) => {
     res.send(500);
   }
 });
+
+export default app;

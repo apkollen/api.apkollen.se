@@ -1,7 +1,7 @@
 import { Knex } from 'knex';
 import db from './db';
 import { DatabaseProductResponse, DatabaseProductReviewResponse } from './models/db';
-import { ProductRequest } from './models/req';
+import { ProductRequest, SortableProductRequestKey } from './models/req';
 import { ProductResponse, ProductReviewResponse } from './models/res';
 
 const PRODUCT_TABLE = 'bs_product';
@@ -27,7 +27,7 @@ const addIntervalQuery = <T>(
 };
 
 export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]> => {
-  const query = db<DatabaseProductResponse>();
+  const query = db.queryBuilder<DatabaseProductResponse>();
 
   // First we create CTE with all products to query from, i.e. either newest or in an interval
   const validDateProductCteName = 'valid_date_product';
@@ -60,18 +60,16 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
   }
 
   // Now we make selection
-  query.select(`
-    url,
-    product_name AS productName,
-    category, subcategory,
-    unit_volume AS unitVolume,
-    unit_price AS unitPrice,
-    alcvol, apk,
-    article_nbr AS articleNbr,
-    ROW_NUMBER() OVER(ORDER BY apk) AS rank,
-    retrieved_timestamp AS retrievedTimestamp,
-    bs_product_review.review_score AS reviewScore
-  `);
+  query.select('url')
+    .select('product_name AS productName')
+    .select('category', 'subcategory')
+    .select('unit_volume AS unitVolume')
+    .select('unit_price AS unitPrice')
+    .select('alcvol', 'apk')
+    .select('article_nbr AS articleNbr')
+    .rowNumber('rank', 'apk')
+    .select('retrieved_timestamp AS retrievedTimestamp')
+    .select('bs_product_review.review_score AS reviewScore')
 
   if (pr.includeMarkedAsDead) {
     // Join will only be made if this is true
@@ -116,7 +114,7 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
     // outer here means if not found in dead links, mark as NULL
     query.leftOuterJoin(
       DEAD_LINK_TABLE,
-      'bs_product.article_nbr',
+      'article_nbr',
       'dead_bs_product.bs_product_article_nbr',
     );
   }
@@ -124,7 +122,7 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
   // Add reviews, outer means "If not there, insert null"
   query.leftOuterJoin(
     REVIEW_TABLE,
-    'bs_product.article_nbr',
+    'article_nbr',
     'bs_product_review.bs_product_article_nbr',
   );
 
@@ -132,7 +130,9 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
   query.from(validDateProductCteName);
 
   if (pr.sortOrder != null) {
-    query.orderBy(pr.sortOrder.key as string, pr.sortOrder.order);
+    // Handle that we have timestamp in db but date in API
+    const key = pr.sortOrder.key === 'retrievedDate' ? 'retrievedTimestamp' : pr.sortOrder.key;
+    query.orderBy(key, pr.sortOrder.order);
   }
 
   if (pr.maxItems != null) {
@@ -143,7 +143,7 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
     query.offset(pr.offset);
   }
 
-  const resRows = await query;
+  const resRows = (await query) as DatabaseProductResponse[];
   const res = resRows.map((dbpr: DatabaseProductResponse): ProductResponse => {
     let markedAsDead = false;
     if (dbpr.markedAsDeadTimestamp != null) {
@@ -165,14 +165,10 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
 
 export const getProductReview = async (articleNbr: number): Promise<ProductReviewResponse> => {
   const row: DatabaseProductReviewResponse = await db<DatabaseProductReviewResponse>(REVIEW_TABLE)
-    .select(
-      `
-    review_score AS score,
-    review_text AS text,
-    reviewer_name AS reviewerName,
-    review_created_timestamp AS createdTimestamp
-  `,
-    )
+    .select('review_score AS score')
+    .select('review_text AS text')
+    .select('reviewer_name AS reviewerName')
+    .select('review_created_timestamp AS createdTimestamp')
     .where('bs_product_article_nbr', articleNbr)
     .first();
   return {
@@ -187,35 +183,36 @@ export const getProductReview = async (articleNbr: number): Promise<ProductRevie
  * @param articleNbr 
  */
 export const getProductCurrentRank = async (articleNbr: number): Promise<number | undefined> => {
-  const row = await db()
+  const row = await db.queryBuilder()
     .with(
       'latest_retrievals',
-      db(PRODUCT_TABLE).select('*').max('retrieved_timestamp').groupBy('article_nbr'),
+      db(PRODUCT_TABLE).select('article_nbr', 'apk').max('retrieved_timestamp').groupBy('article_nbr'),
     )
-    .select('ROW_NUMBER() OVER(ORDER BY apk) AS rank')
+    .rowNumber('rank', 'apk')
     .where('article_nbr', articleNbr)
+    .from(PRODUCT_TABLE)
     .from('latest_retrievals')
     .whereNotIn('article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
-    .first();
+    .first().debug(true);
 
-  return row.rank;
+  return row?.rank;
 };
 
 /**
  * Returns current count of products not marked as dead
  */
-export const getProductCurrentCount = async (): Promise<number> => {
-  const row = await db()
+export const getProductCurrentCount = async (): Promise<number | undefined> => {
+  const row = await db.queryBuilder()
     .with(
       'latest_retrievals',
-      db(PRODUCT_TABLE).select('*').max('retrieved_timestamp').groupBy('article_nbr'),
+      db(PRODUCT_TABLE).select('article_nbr').max('retrieved_timestamp').groupBy('article_nbr'),
     )
-    .select('COUNT(*) AS count')
+    .count<Record<string, number>>()
     .from('latest_retrievals')
     .whereNotIn('article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
     .first();
 
-  return row.count;
+  return row != null ? row['count(*)'] : undefined;
 };
 
 export const getAllCategories = async (): Promise<string[]> => {

@@ -1,9 +1,10 @@
 import { knex, Knex } from 'knex';
+import 'dotenv/config';
 
 const db: Knex = knex({
   client: 'better-sqlite3',
   connection: {
-    filename: process.env.DB_FILE ?? '',
+    filename: process.env.DB_PATH ?? '',
   },
   useNullAsDefault: true,
 });
