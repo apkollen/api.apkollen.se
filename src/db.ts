@@ -1,5 +1,4 @@
 import { knex, Knex } from 'knex';
-import { start } from 'repl';
 import { DatabaseProductResponse } from './models/db';
 import { ProductRequest } from './models/req';
 import { ProductResponse } from './models/res';
@@ -80,9 +79,13 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
     article_nbr AS articleNbr,
     ROW_NUMBER() OVER(ORDER BY apk) AS rank,
     retrieved_timestamp AS retrievedTimestamp,
-    marked_dead_timestamp AS markedAsDeadTimestamp
-    bs_product_review.review_score AS reviewScore,
+    bs_product_review.review_score AS reviewScore
   `);
+
+  if (pr.includeMarkedAsDead) {
+    // Join will only be made if this is true
+    query.select('dead_bs_product.marked_dead_timestamp AS markedAsDeadTimestamp');
+  }
 
   if (pr.productName != null) {
     query.whereIlike(
@@ -131,9 +134,22 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
   );
 
   // We make this selection for the valid dates
-  const resRows = await query.from(validDateProductCteName);
+  query.from(validDateProductCteName);
 
-  const res = resRows.map((dbpr): ProductResponse => {
+  if (pr.sortOrder != null) {
+    query.orderBy(pr.sortOrder.key as string, pr.sortOrder.order);
+  }
+
+  if (pr.maxItems != null) {
+    query.limit(pr.maxItems);
+  }
+
+  if (pr.offset != null) {
+    query.offset(pr.offset);
+  }
+
+  const resRows = await query;
+  const res = resRows.map((dbpr: DatabaseProductResponse): ProductResponse => {
     let markedAsDead = false;
     if (dbpr.markedAsDeadTimestamp != null) {
       // If we have a timestamp for when marked as dead, it IS marked as dead!
@@ -144,7 +160,7 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
       ...dbpr,
       markedAsDead,
       retrievedDate: new Date(dbpr.retreivedTimestamp),
-      markedAsDeadDate: new Date(dbpr.markedAsDeadTimestamp),
+      markedAsDeadDate: dbpr.markedAsDeadTimestamp != null ? new Date(dbpr.markedAsDeadTimestamp) : undefined,
     }
   });
 

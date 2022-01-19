@@ -38,3 +38,7 @@ export type ProductRequest = {
 export type SubcategoryRequest = {
   category: string[];
 };
+
+export type ReviewRequest = {
+  articleNbr: number[];
+}

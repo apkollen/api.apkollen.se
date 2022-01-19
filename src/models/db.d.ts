@@ -1,17 +1,11 @@
-export type DatabaseProductResponse = {
-  url: string;
-  productName: string;
-  category: string;
-  subcategory: string;
-  unitVolume: number;
-  unitPrice: number;
-  alcvol: number;
-  apk: number;
-  articleNbr: number;
-  rank: number,
+import type { ProductResponse, ProductReviewResponse } from "./res";
 
+export type DatabaseProductResponse = Omit<ProductResponse, 'retrievedDate' | 'markedAsDeadDate' | 'markedAsDead'> & {
   // ISO timestamp
   retreivedTimestamp: number;
   markedAsDeadTimestamp?: number;
-  reviewScore?: number,
 };
+
+export type DatabaseProductReviewResponse = Omit<ProductReviewResponse, 'createdDate'> & {
+  createdTimestamp: number
+}
