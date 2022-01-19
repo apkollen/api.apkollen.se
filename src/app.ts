@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { ProductRequest } from './models/req';
-import { getAllCategories, getProducts } from './db';
+import { getAllCategories, getProducts } from './api';
 import { ProductResponse } from './models/res';
 
 console.log('Starting startup...');
