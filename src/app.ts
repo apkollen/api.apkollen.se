@@ -44,7 +44,7 @@ app.post('/bs/products', async (req, res) => {
 });
 
 app.get('/bs/products/history/:articleNbr', async (req, res) => {
-  // try {
+  try {
   const articleNbr: number = Number.parseInt(req.params.articleNbr);
   const history = await getProducts({
     articleNbr: [articleNbr],
@@ -56,9 +56,9 @@ app.get('/bs/products/history/:articleNbr', async (req, res) => {
     },
   });
   res.send(history);
-  // } catch (err) {
-  //   res.sendStatus(400);
-  // }
+  } catch (err) {
+    res.sendStatus(400);
+  }
 });
 
 app.get('/bs/products/review/:articleNbr', async (req, res) => {
