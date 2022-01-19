@@ -1,5 +1,6 @@
 export type ProductResponse = {
-  name: string;
+  url: string,
+  productName: string;
   category: string;
   subcategory: string;
   unitVolume: number;
@@ -7,9 +8,11 @@ export type ProductResponse = {
   alcvol: number;
   apk: number;
   articleNbr: number;
+  rank: number;
   retrievedDate: Date;
   markedAsDead: boolean;
   markedAsDeadDate?: Date;
+  reviewScore?: number,
 };
 
 export type ProductReviewResponse = {

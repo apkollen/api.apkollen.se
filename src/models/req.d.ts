@@ -1,7 +1,7 @@
 import type { DatabaseProduct } from './db';
 
 export type ProductRequest = {
-  name?: string[];
+  productName?: string[];
   category?: string[];
   subcategory?: string[];
   unitVolume?: {
@@ -20,13 +20,13 @@ export type ProductRequest = {
     min?: number;
     max?: number;
   };
-  articleNbr?: number;
+  articleNbr?: number[];
   onlyNewest?: boolean
   retrievedDate?: {
     start?: Date;
     end?: Date;
   };
-  markedAsDead?: boolean;
+  includeMarkedAsDead?: boolean;
   sortOrder?: {
     key: keyof DatabaseProduct;
     order: 'asc' | 'desc';

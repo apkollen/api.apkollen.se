@@ -1,4 +1,4 @@
-export type DatabaseProduct = {
+export type DatabaseProductResponse = {
   url: string;
   productName: string;
   category: string;
@@ -8,7 +8,10 @@ export type DatabaseProduct = {
   alcvol: number;
   apk: number;
   articleNbr: number;
+  rank: number,
 
   // ISO timestamp
-  retreivedDate: number;
+  retreivedTimestamp: number;
+  markedAsDeadTimestamp?: number;
+  reviewScore?: number,
 };
