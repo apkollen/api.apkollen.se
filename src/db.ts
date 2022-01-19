@@ -115,14 +115,16 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
   }
 
   if (!pr.includeMarkedAsDead) {
+    // Only select those not in the DEAD_LINK_TABLE
     query.whereNotIn('article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'));
   } else {
     // Add marked as dead dates, also indicates if something has been marked as dead
-    query.leftJoin(DEAD_LINK_TABLE, 'bs_product.article_nbr', 'dead_bs_product.bs_product_article_nbr')
+    // outer here means if not found in dead links, mark as NULL
+    query.leftOuterJoin(DEAD_LINK_TABLE, 'bs_product.article_nbr', 'dead_bs_product.bs_product_article_nbr')
   }
 
-  // Add reviews
-  query.leftJoin(
+  // Add reviews, outer means "If not there, insert null"
+  query.leftOuterJoin(
     REVIEW_TABLE,
     'bs_product.article_nbr',
     'bs_product_review.bs_product_article_nbr',
