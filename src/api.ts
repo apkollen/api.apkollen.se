@@ -1,8 +1,8 @@
 import { Knex } from 'knex';
 import db from './db';
-import { DatabaseProductResponse } from './models/db';
+import { DatabaseProductResponse, DatabaseProductReviewResponse } from './models/db';
 import { ProductRequest } from './models/req';
-import { ProductResponse } from './models/res';
+import { ProductResponse, ProductReviewResponse } from './models/res';
 
 const PRODUCT_TABLE = 'bs_product';
 const DEAD_LINK_TABLE = 'dead_bs_product';
@@ -161,6 +161,24 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
   });
 
   return res;
+};
+
+export const getProductReview = async (articleNbr: number): Promise<ProductReviewResponse> => {
+  const row: DatabaseProductReviewResponse = await db<DatabaseProductReviewResponse>(REVIEW_TABLE)
+    .select(
+      `
+    review_score AS score,
+    review_text AS text,
+    reviewer_name AS reviewerName,
+    review_created_timestamp AS createdTimestamp
+  `,
+    )
+    .where('bs_product_article_nbr', articleNbr)
+    .first();
+  return {
+    ...row,
+    createdDate: new Date(row.createdTimestamp),
+  };
 };
 
 export const getAllCategories = async (): Promise<string[]> => {

@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { ProductRequest } from './models/req';
-import { getAllCategories, getProducts } from './api';
+import { getAllCategories, getProducts, getProductReview } from './api';
 import { ProductResponse } from './models/res';
 
 console.log('Starting startup...');
@@ -14,7 +14,7 @@ app.use(
   }),
 );
 
-app.post('/products', async (req, res) => {
+app.post('/product', async (req, res) => {
   const pr: ProductRequest = req.query;
   let rp: ProductResponse[];
 
@@ -33,6 +33,16 @@ app.post('/products', async (req, res) => {
       );
       res.sendStatus(500);
     }
+  }
+});
+
+app.get('/product/review/:articleNbr', async (req, res) => {
+  try {
+    const articleNbr: number = Number.parseInt(req.params.articleNbr);
+    const review = getProductReview(articleNbr);
+    res.send(review);
+  } catch (err) {
+    res.sendStatus(400);
   }
 });
 
