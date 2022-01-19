@@ -27,7 +27,7 @@ const addIntervalQuery = <T>(
 };
 
 export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]> => {
-  const query = db<DatabaseProductResponse>(PRODUCT_TABLE);
+  const query = db<DatabaseProductResponse>();
 
   // First we create CTE with all products to query from, i.e. either newest or in an interval
   const validDateProductCteName = 'valid_date_product';
@@ -179,6 +179,43 @@ export const getProductReview = async (articleNbr: number): Promise<ProductRevie
     ...row,
     createdDate: new Date(row.createdTimestamp),
   };
+};
+
+/**
+ * Returns current rank of product with provided articleNbr, or `undefined` if
+ * it currently holds no rank
+ * @param articleNbr 
+ */
+export const getProductCurrentRank = async (articleNbr: number): Promise<number | undefined> => {
+  const row = await db()
+    .with(
+      'latest_retrievals',
+      db(PRODUCT_TABLE).select('*').max('retrieved_timestamp').groupBy('article_nbr'),
+    )
+    .select('ROW_NUMBER() OVER(ORDER BY apk) AS rank')
+    .where('article_nbr', articleNbr)
+    .from('latest_retrievals')
+    .whereNotIn('article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
+    .first();
+
+  return row.rank;
+};
+
+/**
+ * Returns current count of products not marked as dead
+ */
+export const getProductCurrentCount = async (): Promise<number> => {
+  const row = await db()
+    .with(
+      'latest_retrievals',
+      db(PRODUCT_TABLE).select('*').max('retrieved_timestamp').groupBy('article_nbr'),
+    )
+    .select('COUNT(*) AS count')
+    .from('latest_retrievals')
+    .whereNotIn('article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
+    .first();
+
+  return row.count;
 };
 
 export const getAllCategories = async (): Promise<string[]> => {

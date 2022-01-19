@@ -1,7 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import { ProductRequest } from './models/req';
-import { getAllCategories, getProducts, getProductReview } from './api';
+import {
+  getAllCategories,
+  getProducts,
+  getProductReview,
+  getProductCurrentRank,
+  getProductCurrentCount,
+} from './api';
 import { ProductResponse } from './models/res';
 
 console.log('Starting startup...');
@@ -14,7 +20,7 @@ app.use(
   }),
 );
 
-app.post('/product', async (req, res) => {
+app.post('/bs/products', async (req, res) => {
   const pr: ProductRequest = req.query;
   let rp: ProductResponse[];
 
@@ -36,17 +42,54 @@ app.post('/product', async (req, res) => {
   }
 });
 
-app.get('/product/review/:articleNbr', async (req, res) => {
+app.get('/bs/products/history/:articleNbr', async (req, res) => {
   try {
     const articleNbr: number = Number.parseInt(req.params.articleNbr);
-    const review = getProductReview(articleNbr);
+    const history = await getProducts({
+      articleNbr: [articleNbr],
+      onlyNewest: false,
+      includeMarkedAsDead: true,
+      sortOrder: {
+        key: 'retrievedDate',
+        order: 'desc',
+      },
+    });
+    res.send(history);
+  } catch (err) {
+    res.sendStatus(400);
+  }
+});
+
+app.get('/bs/products/review/:articleNbr', async (req, res) => {
+  try {
+    const articleNbr: number = Number.parseInt(req.params.articleNbr);
+    const review = await getProductReview(articleNbr);
     res.send(review);
   } catch (err) {
     res.sendStatus(400);
   }
 });
 
-app.get('/categories', async (_, res) => {
+app.get('/bs/products/current-rank/:articleNbr', async (req, res) => {
+  try {
+    const articleNbr: number = Number.parseInt(req.params.articleNbr);
+    const rank = await getProductCurrentRank(articleNbr);
+    res.send(rank);
+  } catch (err) {
+    res.sendStatus(400);
+  }
+});
+
+app.get('/bs/products/current-count', async (_, res) => {
+  try {
+    const count = await getProductCurrentCount();
+    res.send(count);
+  } catch (err) {
+    res.sendStatus(500);
+  }
+});
+
+app.get('/bs/categories', async (_, res) => {
   try {
     const categories = await getAllCategories();
     res.send(categories);
