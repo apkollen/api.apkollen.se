@@ -1,3 +1,4 @@
+import { Knex } from 'knex';
 import db from './db';
 import { DatabaseProductResponse } from './models/db';
 import { ProductRequest } from './models/req';
