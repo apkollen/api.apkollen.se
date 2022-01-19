@@ -4,7 +4,7 @@ import { DatabaseProductResponse, DatabaseProductReviewResponse } from './models
 import { ProductRequest, SortableProductRequestKey } from './models/req';
 import { ProductResponse, ProductReviewResponse } from './models/res';
 
-const PRODUCT_TABLE = 'bs_product';
+const PRODUCT_HISTORY_TABLE = 'bs_product_history_entry';
 const DEAD_LINK_TABLE = 'dead_bs_product';
 const REVIEW_TABLE = 'bs_product_review';
 
@@ -30,17 +30,16 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
   const query = db.queryBuilder<DatabaseProductResponse>();
 
   // First we create CTE with all products to query from, i.e. either newest or in an interval
-  const validDateProductCteName = 'valid_date_product';
   if (pr.onlyNewest) {
     // We only want latest, so we create CTE of latest instance
     // of each product
     query.with(
-      validDateProductCteName,
-      db(PRODUCT_TABLE).select('*').max('retrieved_timestamp').groupBy('article_nbr'),
+      'valid_bs_product_history_entry',
+      db(PRODUCT_HISTORY_TABLE).select('*').max('retrieved_timestamp').groupBy('valid_bs_product_history_entry.bs_product_article_nbr'),
     );
   } else if (pr.retrievedDate) {
     // We must build our CTE
-    const dateIntervalCte = db(PRODUCT_TABLE).select('*');
+    const dateIntervalCte = db(PRODUCT_HISTORY_TABLE).select('*');
 
     if (pr.retrievedDate.start != null) {
       const startTimestamp = pr.retrievedDate.start.getTime();
@@ -53,10 +52,10 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
     }
 
     // Now we add this selection to our query as CTE
-    query.with(validDateProductCteName, dateIntervalCte);
+    query.with('valid_bs_product_history_entry', dateIntervalCte);
   } else {
     // We assume they want everything
-    query.with(validDateProductCteName, db(PRODUCT_TABLE).select('*'));
+    query.with('valid_bs_product_history_entry', db(PRODUCT_HISTORY_TABLE).select('*'));
   }
 
   // Now we make selection
@@ -66,7 +65,7 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
     .select('unit_volume AS unitVolume')
     .select('unit_price AS unitPrice')
     .select('alcvol', 'apk')
-    .select('article_nbr AS articleNbr')
+    .select('valid_bs_product_history_entry.bs_product_article_nbr AS articleNbr')
     .rowNumber('rank', 'apk')
     .select('retrieved_timestamp AS retrievedTimestamp')
     .select('bs_product_review.review_score AS reviewScore')
@@ -103,18 +102,18 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
   addIntervalQuery<{ min?: number; max?: number }>(query, pr.apk, 'min', 'max', 'apk');
 
   if (pr.articleNbr != null) {
-    query.whereIn('article_nbr', pr.articleNbr);
+    query.whereIn('valid_bs_product_history_entry.bs_product_article_nbr', pr.articleNbr);
   }
 
   if (!pr.includeMarkedAsDead) {
     // Only select those not in the DEAD_LINK_TABLE
-    query.whereNotIn('article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'));
+    query.whereNotIn('valid_bs_product_history_entry.bs_product_article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'));
   } else {
     // Add marked as dead dates, also indicates if something has been marked as dead
     // outer here means if not found in dead links, mark as NULL
     query.leftOuterJoin(
       DEAD_LINK_TABLE,
-      'article_nbr',
+      'valid_bs_product_history_entry.bs_product_article_nbr',
       'dead_bs_product.bs_product_article_nbr',
     );
   }
@@ -122,12 +121,12 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
   // Add reviews, outer means "If not there, insert null"
   query.leftOuterJoin(
     REVIEW_TABLE,
-    'article_nbr',
+    'valid_bs_product_history_entry.bs_product_article_nbr',
     'bs_product_review.bs_product_article_nbr',
   );
 
   // We make this selection for the valid dates
-  query.from(validDateProductCteName);
+  query.from('valid_bs_product_history_entry');
 
   if (pr.sortOrder != null) {
     // Handle that we have timestamp in db but date in API
@@ -187,12 +186,12 @@ export const getProductCurrentRank = async (articleNbr: number): Promise<number 
   const row = await db.queryBuilder()
     .with(
       'latest_retrievals',
-      db(PRODUCT_TABLE).select('article_nbr', 'apk').max('retrieved_timestamp').groupBy('article_nbr'),
+      db(PRODUCT_HISTORY_TABLE).select('bs_product_article_nbr', 'apk').max('retrieved_timestamp').groupBy('bs_product_article_nbr'),
     )
     .rowNumber('rank', 'apk')
-    .where('article_nbr', articleNbr)
+    .where('latest_retrievals.bs_product_article_nbr', articleNbr)
     .from('latest_retrievals')
-    .whereNotIn('article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
+    .whereNotIn('latest_retrievals.bs_product_article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
     .first();
 
   return row?.rank;
@@ -205,16 +204,16 @@ export const getProductCurrentCount = async (): Promise<number | undefined> => {
   const row = await db.queryBuilder()
     .with(
       'latest_retrievals',
-      db(PRODUCT_TABLE).select('article_nbr').max('retrieved_timestamp').groupBy('article_nbr'),
+      db(PRODUCT_HISTORY_TABLE).select('bs_product_article_nbr').max('retrieved_timestamp').groupBy('bs_product_article_nbr'),
     )
     .count<Record<string, number>>()
     .from('latest_retrievals')
-    .whereNotIn('article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
+    .whereNotIn('latest_retrievals.bs_product_article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
     .first();
 
   return row != null ? row['count(*)'] : undefined;
 };
 
 export const getAllCategories = async (): Promise<string[]> => {
-  return db<string[]>(PRODUCT_TABLE).distinct('category');
+  return db<string[]>(PRODUCT_HISTORY_TABLE).distinct('category');
 };
