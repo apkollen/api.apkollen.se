@@ -219,3 +219,11 @@ export const getProductCurrentCount = async (): Promise<number | undefined> => {
 export const getAllCategories = async (): Promise<string[]> => {
   return db<string[]>(PRODUCT_HISTORY_TABLE).distinct('category');
 };
+
+/**
+ * Returns all subcategories to the categories provided
+ * @param categories List of category names
+ */
+export const getSubcatFromCats = async (categories: string[]): Promise<string[]> => {
+  return db<string[]>(PRODUCT_HISTORY_TABLE).select('subcategory').distinct().whereIn('category', categories);
+};

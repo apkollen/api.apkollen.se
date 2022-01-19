@@ -34,11 +34,3 @@ export type ProductRequest = {
   maxItems?: number;
   offset?: number;
 };
-
-export type SubcategoryRequest = {
-  category: string[];
-};
-
-export type ReviewRequest = {
-  articleNbr: number[];
-};
