@@ -31,8 +31,8 @@ export type ProductRequest = {
     key: keyof DatabaseProduct;
     order: 'asc' | 'desc';
   };
-  maxItems: number;
-  offset: number;
+  maxItems?: number;
+  offset?: number;
 };
 
 export type SubcategoryRequest = {

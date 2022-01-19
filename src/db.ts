@@ -1,4 +1,5 @@
 import { knex, Knex } from 'knex';
+import { start } from 'repl';
 import { DatabaseProductResponse } from './models/db';
 import { ProductRequest } from './models/req';
 import { ProductResponse } from './models/res';
@@ -166,3 +167,7 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductResponse[]
 
   return res;
 };
+
+export const getAllCategories = async (): Promise<string[]> => {
+  return db<string[]>(PRODUCT_TABLE).distinct('category');
+}
