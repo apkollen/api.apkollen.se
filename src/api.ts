@@ -183,6 +183,7 @@ export const getProductReview = async (articleNbr: number): Promise<ProductRevie
  * @param articleNbr 
  */
 export const getProductCurrentRank = async (articleNbr: number): Promise<number | undefined> => {
+  console.log(articleNbr);
   const row = await db.queryBuilder()
     .with(
       'latest_retrievals',
@@ -190,10 +191,9 @@ export const getProductCurrentRank = async (articleNbr: number): Promise<number 
     )
     .rowNumber('rank', 'apk')
     .where('article_nbr', articleNbr)
-    .from(PRODUCT_TABLE)
     .from('latest_retrievals')
     .whereNotIn('article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
-    .first().debug(true);
+    .first();
 
   return row?.rank;
 };
