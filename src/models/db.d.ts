@@ -1,7 +1,7 @@
-import type { ProductHistoryEntryResponse, ProductReviewResponse } from './res';
+import type { ProductHistoryEntry, ProductReview } from './index';
 
 export type DatabaseProductHistoryEntry = Omit<
-  ProductHistoryEntryResponse,
+  ProductHistoryEntry,
   'retrievedDate' | 'markedAsDeadDate' | 'markedAsDead'
 > & {
   // ISO timestamp
@@ -9,6 +9,7 @@ export type DatabaseProductHistoryEntry = Omit<
   markedAsDeadTimestamp?: number;
 };
 
-export type DatabaseProductReviewResponse = Omit<ProductReviewResponse, 'createdDate'> & {
+export type DatabaseProductReview = Omit<ProductReview, 'createdDate'> & {
+  articleNbr: number,
   createdTimestamp: number;
 };

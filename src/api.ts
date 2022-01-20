@@ -1,8 +1,8 @@
 import { Knex } from 'knex';
 import db from './db';
-import { DatabaseProductHistoryEntry, DatabaseProductReviewResponse } from './models/db';
-import { ProductRequest, SortableProductRequestKey } from './models/req';
-import { ProductHistoryEntryResponse, ProductReviewResponse } from './models/res';
+import { ProductHistoryEntry, ProductReview } from './models';
+import { DatabaseProductHistoryEntry, DatabaseProductReview } from './models/db';
+import { SortableProductRequestKey } from './models/req';
 
 const PRODUCT_HISTORY_TABLE = 'bs_product_history_entry';
 const DEAD_LINK_TABLE = 'dead_bs_product';
@@ -25,6 +25,67 @@ const addIntervalQuery = <T>(
     }
   }
 };
+
+/**
+ * Select product history coloumn names as camelCase
+ * @param query Query from which to select
+ * @param fromTable Table in which `bs_product_article_nbr` is to be taken
+ */
+const selectCamelCaseProductHistory = (query: Knex.QueryBuilder, fromTable: string) => {
+  query.select('url')
+    .select('product_name AS productName')
+    .select('category', 'subcategory')
+    .select('unit_volume AS unitVolume')
+    .select('unit_price AS unitPrice')
+    .select('alcvol', 'apk')
+    .select(`${fromTable}.bs_product_article_nbr AS articleNbr`)
+    .select('retrieved_timestamp AS retrievedTimestamp');
+}
+
+/**
+ * Converts a entry in the database to actual history entry
+ * @param dbpr Result from database
+ */
+const reduceDbPosthistoryEntry = (dbpr: DatabaseProductHistoryEntry): ProductHistoryEntry => {
+  let markedAsDead = false;
+  if (dbpr.markedAsDeadTimestamp != null) {
+    // If we have a timestamp for when marked as dead, it IS marked as dead!
+    markedAsDead = true;
+  }
+
+  const { retrievedTimestamp, ...reduced } = dbpr;
+
+  return {
+    ...reduced,
+    markedAsDead,
+    retrievedDate: new Date(retrievedTimestamp),
+    markedAsDeadDate:
+      dbpr.markedAsDeadTimestamp != null ? new Date(dbpr.markedAsDeadTimestamp) : undefined,
+  };
+};
+
+
+/**
+ * Get complete history of products with specified article numbers
+ * @param articleNbrs List of article numbers to get history from
+ */
+export const getProductsHistory = async (articleNbrs: number[]): Promise<Record<number, ProductHistoryEntry[]>> => {
+  const query = db<DatabaseProductHistoryEntry>(PRODUCT_HISTORY_TABLE);
+  selectCamelCaseProductHistory(query, PRODUCT_HISTORY_TABLE);
+  query.whereIn('article_nbr', articleNbrs).orderBy('retrievedTimestamp');
+
+  const rows = await query;
+
+  let res: Record<number, ProductHistoryEntry[]> = {};
+
+  // Ensure all have empty lists to begin with
+  articleNbrs.forEach(i => res[i] = []);
+  rows.forEach((v: DatabaseProductHistoryEntry) => {
+    res[v.articleNbr].push(reduceDbPosthistoryEntry(v));
+  });
+
+  return res;
+}
 
 export const getProducts = async (pr: ProductRequest): Promise<ProductHistoryEntryResponse[]> => {
   const query = db.queryBuilder<DatabaseProductHistoryEntry>();
@@ -66,7 +127,6 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductHistoryEnt
     .select('unit_price AS unitPrice')
     .select('alcvol', 'apk')
     .select('valid_bs_product_history_entry.bs_product_article_nbr AS articleNbr')
-    .rowNumber('rank', 'apk')
     .select('retrieved_timestamp AS retrievedTimestamp')
     .select('bs_product_review.review_score AS reviewScore')
 
@@ -164,26 +224,42 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductHistoryEnt
   return res;
 };
 
-export const getProductReview = async (articleNbr: number): Promise<ProductReviewResponse> => {
-  const row: DatabaseProductReviewResponse = await db<DatabaseProductReviewResponse>(REVIEW_TABLE)
+/**
+ * Retrieves product reviews for specified article numbers, and returns a record
+ * mapping each article number to their review (or null, if none is found)
+ * @param articleNbrs 
+ */
+export const getProductReview = async (articleNbrs: number[]): Promise<Record<number, ProductReview | null>> => {
+  const rows: DatabaseProductReview[] = await db<DatabaseProductReview>(REVIEW_TABLE)
     .select('review_score AS score')
     .select('review_text AS text')
     .select('reviewer_name AS reviewerName')
     .select('review_created_timestamp AS createdTimestamp')
-    .where('bs_product_article_nbr', articleNbr)
-    .first();
-  return {
-    ...row,
-    createdDate: new Date(row.createdTimestamp),
-  };
+    .select('bs_product_article_nbr AS articleNbr')
+    .whereIn('bs_product_article_nbr', articleNbrs);
+
+  let res: Record<number, ProductReview | null> = {};
+  articleNbrs.forEach(i => res[i] = null);
+  rows.forEach((v: DatabaseProductReview) => {
+    const { createdTimestamp, articleNbr, ...reduced} = v;
+
+    const pr: ProductReview = {
+      ...reduced,
+      createdDate: new Date(createdTimestamp),
+    }
+
+    res[v.articleNbr] = pr;
+  });
+
+  return res;
 };
 
 /**
- * Returns current rank of product with provided articleNbr, or `undefined` if
+ * Returns current ranks of products with provided article numbers, or `undefined` if
  * it currently holds no rank
  * @param articleNbr 
  */
-export const getProductCurrentRank = async (articleNbr: number): Promise<number | undefined> => {
+export const getCurrentProductRank = async (articleNbrs: number[]): Promise<Record<number, number | null> => {
   console.log(articleNbr);
   const row = await db.queryBuilder()
     .with(
@@ -202,7 +278,7 @@ export const getProductCurrentRank = async (articleNbr: number): Promise<number 
 /**
  * Returns current count of products not marked as dead
  */
-export const getProductCurrentCount = async (): Promise<number | undefined> => {
+export const getCurrentProductCount = async (): Promise<number | undefined> => {
   const row = await db.queryBuilder()
     .with(
       'latest_retrievals',

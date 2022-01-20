@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { ProductRequest, SubcategoryRequest } from './models/req';
+import { ProductRequest } from './models/req';
 import {
   getAllCategories,
   getProducts,
@@ -42,6 +42,10 @@ app.post('/bs/products', async (req, res) => {
     }
   }
 });
+
+app.post('/bs/products/current', async (req, res) => {
+  
+})
 
 app.get('/bs/products/history/:articleNbr', async (req, res) => {
   try {
