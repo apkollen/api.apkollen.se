@@ -1,15 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import { ProductRequest } from './models/req';
-import {
-  getAllCategories,
-  getProducts,
-  getProductReview,
-  getProductCurrentRank,
-  getProductCurrentCount,
-  getSubcatFromCats,
-} from './api';
-import { ProductHistoryEntryResponse } from './models/res';
+import { SearchProductsRequest } from './models/req';
+import { getProductReview, getProductHistory, searchProducts, getCurrentProductRank, getCurrentProductCount, getAllCategories, getSubcatFromCats } from './api';
+import { ProductHistoryEntry } from './models/index';
 
 console.log('Starting startup...');
 
@@ -21,12 +14,12 @@ app.use(
   }),
 );
 
-app.post('/bs/products', async (req, res) => {
-  const pr: ProductRequest = req.query;
-  let rp: ProductHistoryEntryResponse[];
+app.post('/bs/products/search', async (req, res) => {
+  const pr: SearchProductsRequest = req.query;
+  let rp: ProductHistoryEntry[];
 
   try {
-    rp = await getProducts(pr);
+    rp = await searchProducts(pr);
     res.send(rp);
   } catch (err) {
     if (err instanceof TypeError) {
@@ -43,51 +36,54 @@ app.post('/bs/products', async (req, res) => {
   }
 });
 
-app.post('/bs/products/current', async (req, res) => {
+app.post('/bs/products/history', async (req, res) => {
+  try {
+  const { articleNbrs } = req?.query;
+
+  if (!Array.isArray(articleNbrs)) {
+    res.sendStatus(400);
+  }
+
+  const histories = await getProductHistory(articleNbrs as unknown as number[])
+  res.send(histories);
+  } catch (err) {
+    res.sendStatus(400);
+  }
+});
+
+app.post('/bs/products/review', async (req, res) => {
+  try {
+    const { articleNbrs } = req?.query;
+
+    if (!Array.isArray(articleNbrs)) {
+      res.sendStatus(400);
+    }
   
-})
-
-app.get('/bs/products/history/:articleNbr', async (req, res) => {
-  try {
-  const articleNbr: number = Number.parseInt(req.params.articleNbr);
-  const history = await getProducts({
-    articleNbr: [articleNbr],
-    onlyNewest: false,
-    includeMarkedAsDead: true,
-    sortOrder: {
-      key: 'retrievedDate',
-      order: 'desc',
-    },
-  });
-  res.send(history);
+    const reviews = await getProductReview(articleNbrs as unknown as number[])
+    res.send(reviews);
   } catch (err) {
     res.sendStatus(400);
   }
 });
 
-app.get('/bs/products/review/:articleNbr', async (req, res) => {
+app.get('/bs/products/rank', async (req, res) => {
   try {
-    const articleNbr: number = Number.parseInt(req.params.articleNbr);
-    const review = await getProductReview(articleNbr);
-    res.send(review);
+    const { articleNbrs } = req?.query;
+
+    if (!Array.isArray(articleNbrs)) {
+      res.sendStatus(400);
+    }
+  
+    const ranks = await getCurrentProductRank(articleNbrs as unknown as number[])
+    res.send(ranks);
   } catch (err) {
     res.sendStatus(400);
   }
 });
 
-app.get('/bs/products/current-rank/:articleNbr', async (req, res) => {
+app.get('/bs/products/count', async (_, res) => {
   try {
-    const articleNbr: number = Number.parseInt(req.params.articleNbr);
-    const rank = await getProductCurrentRank(articleNbr);
-    res.send([rank]);
-  } catch (err) {
-    res.sendStatus(400);
-  }
-});
-
-app.get('/bs/products/current-count', async (_, res) => {
-  try {
-    const count = await getProductCurrentCount();
+    const count = await getCurrentProductCount();
     res.send([count]);
   } catch (err) {
     res.sendStatus(500);

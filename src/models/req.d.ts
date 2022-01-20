@@ -1,6 +1,6 @@
 export type SortableProductRequestKey = keyof Omit<ProductRequest, 'onlyNewest' | 'includeMarkedAsDead' | 'sortOrder' | 'maxItems' | 'offset'>
 
-export type ProductHistoryEntryRequest = {
+export type SearchProductsRequest = {
   productName?: string[];
   category?: string[];
   subcategory?: string[];
@@ -34,9 +34,3 @@ export type ProductHistoryEntryRequest = {
   maxItems?: number;
   offset?: number;
 };
-
-// A list of `articleNbr` for which to return reviews
-export type ProductReviewRequest = number[];
-
-// A list of `articleNbr` for which to return ranking
-export type ProductRankRequest = number[];

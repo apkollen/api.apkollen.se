@@ -2,12 +2,20 @@ import { Knex } from 'knex';
 import db from './db';
 import { ProductHistoryEntry, ProductReview } from './models';
 import { DatabaseProductHistoryEntry, DatabaseProductReview } from './models/db';
-import { SortableProductRequestKey } from './models/req';
+import { SearchProductsRequest } from './models/req';
 
 const PRODUCT_HISTORY_TABLE = 'bs_product_history_entry';
 const DEAD_LINK_TABLE = 'dead_bs_product';
 const REVIEW_TABLE = 'bs_product_review';
 
+/**
+ * Adds a query for an interval
+ * @param query 
+ * @param obj 
+ * @param startKey 
+ * @param endKey 
+ * @param coloumnName 
+ */
 const addIntervalQuery = <T>(
   query: Knex.QueryBuilder,
   obj: T | undefined,
@@ -69,7 +77,7 @@ const reduceDbPosthistoryEntry = (dbpr: DatabaseProductHistoryEntry): ProductHis
  * Get complete history of products with specified article numbers
  * @param articleNbrs List of article numbers to get history from
  */
-export const getProductsHistory = async (articleNbrs: number[]): Promise<Record<number, ProductHistoryEntry[]>> => {
+export const getProductHistory = async (articleNbrs: number[]): Promise<Record<number, ProductHistoryEntry[]>> => {
   const query = db<DatabaseProductHistoryEntry>(PRODUCT_HISTORY_TABLE);
   selectCamelCaseProductHistory(query, PRODUCT_HISTORY_TABLE);
   query.whereIn('article_nbr', articleNbrs).orderBy('retrievedTimestamp');
@@ -87,7 +95,11 @@ export const getProductsHistory = async (articleNbrs: number[]): Promise<Record<
   return res;
 }
 
-export const getProducts = async (pr: ProductRequest): Promise<ProductHistoryEntryResponse[]> => {
+/**
+ * 
+ * @param pr 
+ */
+export const searchProducts = async (pr: SearchProductsRequest): Promise<ProductHistoryEntry[]> => {
   const query = db.queryBuilder<DatabaseProductHistoryEntry>();
 
   // First we create CTE with all products to query from, i.e. either newest or in an interval
@@ -191,7 +203,7 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductHistoryEnt
   if (pr.sortOrder != null) {
     // Handle that we have timestamp in db but date in API
     const key = pr.sortOrder.key === 'retrievedDate' ? 'retrievedTimestamp' : pr.sortOrder.key;
-    query.orderBy(key, pr.sortOrder.order);
+    query.orderBy(key as string, pr.sortOrder.order);
   }
 
   if (pr.maxItems != null) {
@@ -203,7 +215,7 @@ export const getProducts = async (pr: ProductRequest): Promise<ProductHistoryEnt
   }
 
   const resRows = (await query) as DatabaseProductHistoryEntry[];
-  const res = resRows.map((dbpr: DatabaseProductHistoryEntry): ProductHistoryEntryResponse => {
+  const res = resRows.map((dbpr: DatabaseProductHistoryEntry): ProductHistoryEntry => {
     let markedAsDead = false;
     if (dbpr.markedAsDeadTimestamp != null) {
       // If we have a timestamp for when marked as dead, it IS marked as dead!
@@ -256,23 +268,28 @@ export const getProductReview = async (articleNbrs: number[]): Promise<Record<nu
 
 /**
  * Returns current ranks of products with provided article numbers, or `undefined` if
- * it currently holds no rank
- * @param articleNbr 
+ * it currently holds no rank, as a record mapping article number to ranking.
+ * @param articleNbrs 
  */
-export const getCurrentProductRank = async (articleNbrs: number[]): Promise<Record<number, number | null> => {
-  console.log(articleNbr);
-  const row = await db.queryBuilder()
+export const getCurrentProductRank = async (articleNbrs: number[]): Promise<Record<number, number | null>> => {
+  const rows = await db.queryBuilder()
     .with(
       'latest_retrievals',
       db(PRODUCT_HISTORY_TABLE).select('bs_product_article_nbr', 'apk').max('retrieved_timestamp').groupBy('bs_product_article_nbr'),
     )
     .rowNumber('rank', 'apk')
-    .where('latest_retrievals.bs_product_article_nbr', articleNbr)
+    .select('latest_retrievals.bs_product_article_nbr AS articleNbr')
+    .whereIn('latest_retrievals.bs_product_article_nbr', articleNbrs)
     .from('latest_retrievals')
-    .whereNotIn('latest_retrievals.bs_product_article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
-    .first();
+    .whereNotIn('latest_retrievals.bs_product_article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'));
+  
+  let res: Record<number, number | null> = {};
+  articleNbrs.forEach(i => res[i] = null);
+  rows.forEach((row) => {
+    res[row.articleNbr] = row.rank;
+  });
 
-  return row?.rank;
+  return res;
 };
 
 /**
