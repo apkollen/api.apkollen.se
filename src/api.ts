@@ -132,15 +132,7 @@ export const searchProducts = async (pr: SearchProductsRequest): Promise<Product
   }
 
   // Now we make selection
-  query.select('url')
-    .select('product_name AS productName')
-    .select('category', 'subcategory')
-    .select('unit_volume AS unitVolume')
-    .select('unit_price AS unitPrice')
-    .select('alcvol', 'apk')
-    .select('valid_bs_product_history_entry.bs_product_article_nbr AS articleNbr')
-    .select('retrieved_timestamp AS retrievedTimestamp')
-    .select('bs_product_review.review_score AS reviewScore')
+  selectCamelCaseProductHistory(query, 'valid_bs_product_history_entry');
 
   if (pr.includeMarkedAsDead) {
     // Join will only be made if this is true
