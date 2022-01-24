@@ -1,5 +1,8 @@
 # test/db
 
+This is a way to let `knex` run a `sqlite` database in memory, by providing functions
+to migrate (initialize) and seed (fill with data).
+
 To recreate `migrations/init.js` and `seeds/init.js`, simply open the new `sqlite` test DB and run the following commands
 
 ```
@@ -17,8 +20,9 @@ Note that `exports.down` isn't really needed, since we just run test DBs in memo
 ## migrations/
 
 `migrations/` contain a single script that basically runs a copy/paste of `init.sql` in the `ginger51011/bsscraper` repo.
+
 This is to initialize a new copy of that DB.
 
 ## seeds/
 
-`seeds/` contains a single script to dump data from `test_db.sqlite` 
+`seeds/` contains a single script to dump data from a test database.

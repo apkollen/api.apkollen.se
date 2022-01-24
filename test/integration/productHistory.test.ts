@@ -11,12 +11,12 @@ beforeAll(async () => {
   await db.seed.run();
 })
 
-describe('get product history', () => {
-  it('fails without articleNbrs', async () => {
+describe('getting product history', () => {
+  it('fails with 400 without articleNbrs', async () => {
     await request(app).post(BASE_ROUTE).send({}).expect(400);
   });
 
-  it('returns history for valid article number', async () => {
+  it('returns for valid article number', async () => {
     const res = await request(app)
       .post(BASE_ROUTE)
       .send({ articleNbrs: [VALID_ARTICLE_NBR_0]} );
