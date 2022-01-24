@@ -67,37 +67,45 @@ app.post(
   },
 );
 
-app.post('/bs/products/review',  body('articleNbrs').exists().isArray().notEmpty(), async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+app.post(
+  '/bs/products/review',
+  body('articleNbrs').exists().isArray().notEmpty(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { articleNbrs } = req?.body;
+
+      const reviews = await getProductReview(articleNbrs as unknown as number[]);
+      res.send(reviews);
+    } catch (err) {
+      res.sendStatus(400);
     }
+  },
+);
 
-    const { articleNbrs } = req?.body;
+app.get(
+  '/bs/products/rank',
+  body('articleNbrs').exists().isArray().notEmpty(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
 
-    const reviews = await getProductReview(articleNbrs as unknown as number[]);
-    res.send(reviews);
-  } catch (err) {
-    res.sendStatus(400);
-  }
-});
+      const { articleNbrs } = req?.body;
 
-app.get('/bs/products/rank', body('articleNbrs').exists().isArray().notEmpty(), async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      const ranks = await getCurrentProductRank(articleNbrs as unknown as number[]);
+      res.send(ranks);
+    } catch (err) {
+      res.sendStatus(400);
     }
-    
-    const { articleNbrs } = req?.body;
-
-    const ranks = await getCurrentProductRank(articleNbrs as unknown as number[]);
-    res.send(ranks);
-  } catch (err) {
-    res.sendStatus(400);
-  }
-});
+  },
+);
 
 app.get('/bs/products/count', async (_, res) => {
   try {
