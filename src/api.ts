@@ -96,7 +96,8 @@ export const getProductHistory = async (articleNbrs: number[]): Promise<Record<n
 }
 
 /**
- * 
+ * Searches for several product history entries, and possibly only the latest
+ * entries (i.e. the current top list)
  * @param pr 
  */
 export const searchProducts = async (pr: SearchProductsRequest): Promise<ProductHistoryEntry[]> => {
@@ -207,23 +208,7 @@ export const searchProducts = async (pr: SearchProductsRequest): Promise<Product
   }
 
   const resRows = (await query) as DatabaseProductHistoryEntry[];
-  const res = resRows.map((dbpr: DatabaseProductHistoryEntry): ProductHistoryEntry => {
-    let markedAsDead = false;
-    if (dbpr.markedAsDeadTimestamp != null) {
-      // If we have a timestamp for when marked as dead, it IS marked as dead!
-      markedAsDead = true;
-    }
-
-    const { retrievedTimestamp, ...reduced } = dbpr;
-
-    return {
-      ...reduced,
-      markedAsDead,
-      retrievedDate: new Date(retrievedTimestamp),
-      markedAsDeadDate:
-        dbpr.markedAsDeadTimestamp != null ? new Date(dbpr.markedAsDeadTimestamp) : undefined,
-    };
-  });
+  const res = resRows.map((dbpr: DatabaseProductHistoryEntry): ProductHistoryEntry => reduceDbPosthistoryEntry(dbpr));
 
   return res;
 };
