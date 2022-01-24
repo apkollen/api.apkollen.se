@@ -73,27 +73,7 @@ const reduceDbPosthistoryEntry = (dbpr: DatabaseProductHistoryEntry): ProductHis
 };
 
 
-/**
- * Get complete history of products with specified article numbers
- * @param articleNbrs List of article numbers to get history from
- */
-export const getProductHistory = async (articleNbrs: number[]): Promise<Record<number, ProductHistoryEntry[]>> => {
-  const query = db<DatabaseProductHistoryEntry>(PRODUCT_HISTORY_TABLE);
-  selectCamelCaseProductHistory(query, PRODUCT_HISTORY_TABLE);
-  query.whereIn('article_nbr', articleNbrs).orderBy('retrievedTimestamp');
 
-  const rows = await query;
-
-  let res: Record<number, ProductHistoryEntry[]> = {};
-
-  // Ensure all have empty lists to begin with
-  articleNbrs.forEach(i => res[i] = []);
-  rows.forEach((v: DatabaseProductHistoryEntry) => {
-    res[v.articleNbr].push(reduceDbPosthistoryEntry(v));
-  });
-
-  return res;
-}
 
 /**
  * Searches for several product history entries, and possibly only the latest
@@ -212,6 +192,28 @@ export const searchProducts = async (pr: SearchProductsRequest): Promise<Product
 
   return res;
 };
+
+/**
+ * Get complete history of products with specified article numbers
+ * @param articleNbrs List of article numbers to get history from
+ */
+ export const getProductHistory = async (articleNbrs: number[]): Promise<Record<number, ProductHistoryEntry[]>> => {
+  const query = db<DatabaseProductHistoryEntry>(PRODUCT_HISTORY_TABLE);
+  selectCamelCaseProductHistory(query, PRODUCT_HISTORY_TABLE);
+  query.whereIn('articleNbr', articleNbrs).orderBy('retrievedTimestamp');
+
+  const rows = await query;
+
+  let res: Record<number, ProductHistoryEntry[]> = {};
+
+  // Ensure all have empty lists to begin with
+  articleNbrs.forEach(i => res[i] = []);
+  rows.forEach((v: DatabaseProductHistoryEntry) => {
+    res[v.articleNbr].push(reduceDbPosthistoryEntry(v));
+  });
+
+  return res;
+}
 
 /**
  * Retrieves product reviews for specified article numbers, and returns a record
