@@ -22,5 +22,5 @@ describe('getting product history', () => {
       .send({ articleNbrs: [VALID_ARTICLE_NBR_0]} );
 
     expect(res.statusCode).toEqual(200);
-  })
+  });
 });
