@@ -1,17 +1,17 @@
 import express from 'express';
 import cors from 'cors';
-import { SearchProductsRequest } from './models/req';
+import { FullSearchProductRequest, TopListSearchProductRequest } from './models/req';
 import {
   getProductReview,
   getProductHistory,
-  searchProducts,
+  searchTopList,
+  searchAllHistoryEntries,
   getCurrentProductRank,
   getCurrentProductCount,
   getAllCategories,
   getSubcatFromCats,
 } from './api';
-import { ProductHistoryEntry } from './models/index';
-import { body, query, validationResult } from 'express-validator';
+import { body, validationResult } from 'express-validator';
 
 console.log('Starting startup...');
 
@@ -25,25 +25,25 @@ app.use(
 
 app.use(express.json());
 
-app.post('/bs/products/search', async (req, res) => {
-  const pr: SearchProductsRequest = req.query;
-  let rp: ProductHistoryEntry[];
+app.post('/bs/products/search/current', async (req, res) => {
+  const pr: TopListSearchProductRequest = req.query;
 
   try {
-    rp = await searchProducts(pr);
+    const rp = await searchTopList(pr);
     res.send(rp);
   } catch (err) {
-    if (err instanceof TypeError) {
-      // Probably something wrong with request
-      res.sendStatus(400);
-    } else {
-      console.error(
-        `Error when getting products!:\n\t${JSON.stringify(
-          err,
-        )}\n\tWith request query: ${JSON.stringify(req.query)}`,
-      );
-      res.sendStatus(500);
-    }
+    res.sendStatus(500);
+  }
+});
+
+app.post('/bs/products/search/all', async (req, res) => {
+  const pr: FullSearchProductRequest = req.query;
+
+  try {
+    const rp = await searchAllHistoryEntries(pr);
+    res.send(rp);
+  } catch (err) {
+    res.sendStatus(500);
   }
 });
 
