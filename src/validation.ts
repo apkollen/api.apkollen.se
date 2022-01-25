@@ -58,6 +58,8 @@ export const baseSearchProductRequestSchema: Schema = {
     errorMessage: 'sortOrder key must be of sortable member of the product properties',
     isIn: {
       // Confusing type workaround, just add valid keys to inner array
+      // note that timestamps and possibly undefined SHOULD NOT BE SORTABLE,
+      // as there is no guarantee that these are available to the SQL query
       options: [
         [
           'productName',
