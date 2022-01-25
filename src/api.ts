@@ -2,7 +2,7 @@ import { Knex } from 'knex';
 import db from './db';
 import { ProductHistoryEntry, ProductReview } from './models';
 import { DatabaseProductHistoryEntry, DatabaseProductReview } from './models/db';
-import { FullSearchProductRequest, ToplistSearchProductRequest } from './models/req';
+import { FullSearchProductRequest, TopListSearchProductRequest } from './models/req';
 
 const PRODUCT_HISTORY_TABLE = 'bs_product_history_entry';
 const DEAD_LINK_TABLE = 'dead_bs_product';
@@ -77,10 +77,11 @@ const reduceDbPosthistoryEntry = (dbpr: DatabaseProductHistoryEntry): ProductHis
  * Searches the database for only the latest entries of
  * products not marked as dead
  * @param pr A query for products in the APKollen top list
- * @returns A list of the latest, live, product history entries
+ * @returns A list of the latest, live, product history entries, including
+ * their current rank
  */
-export const searchToplist = async (
-  pr: ToplistSearchProductRequest,
+export const searchTopList = async (
+  pr: TopListSearchProductRequest,
 ): Promise<ProductHistoryEntry[]> => {
   const query = db.queryBuilder<DatabaseProductHistoryEntry>();
 
@@ -140,6 +141,13 @@ export const searchToplist = async (
     db(DEAD_LINK_TABLE).select('bs_product_article_nbr'),
   );
 
+  // Add reviews, outer means "If not there, insert null"
+  query.leftOuterJoin(
+    REVIEW_TABLE,
+    `${cteName}.bs_product_article_nbr`,
+    'bs_product_review.bs_product_article_nbr',
+  );
+
   // We make this selection from the CTE
   query.from(cteName);
 
@@ -166,25 +174,20 @@ export const searchToplist = async (
 };
 
 /**
- * Searches for several product history entries, and possibly only the latest
- * entries (i.e. the current top list)
- * @param pr
+ * Searches through the whole history of product entries
+ * @param pr A full search request of the APKollen database
+ * @returns A list of all product history entries matching the search. **Does _not_
+ * include current rank of any product.**
  */
-export const searchProducts = async (pr: FullSearchProductRequest): Promise<ProductHistoryEntry[]> => {
+export const searchAllHistoryEntries = async (
+  pr: FullSearchProductRequest,
+): Promise<ProductHistoryEntry[]> => {
   const query = db.queryBuilder<DatabaseProductHistoryEntry>();
 
+  const cteName = 'valid_date_interval_bs_product_history_entry';
+
   // First we create CTE with all products to query from, i.e. either newest or in an interval
-  if (pr.onlyNewest) {
-    // We only want latest, so we create CTE of latest instance
-    // of each product
-    query.with(
-      'valid_bs_product_history_entry',
-      db(PRODUCT_HISTORY_TABLE)
-        .select('*')
-        .max('retrieved_timestamp')
-        .groupBy('valid_bs_product_history_entry.bs_product_article_nbr'),
-    );
-  } else if (pr.retrievedDate) {
+  if (pr.retrievedDate) {
     // We must build our CTE
     const dateIntervalCte = db(PRODUCT_HISTORY_TABLE).select('*');
 
@@ -199,14 +202,14 @@ export const searchProducts = async (pr: FullSearchProductRequest): Promise<Prod
     }
 
     // Now we add this selection to our query as CTE
-    query.with('valid_bs_product_history_entry', dateIntervalCte);
+    query.with(cteName, dateIntervalCte);
   } else {
     // We assume they want everything
-    query.with('valid_bs_product_history_entry', db(PRODUCT_HISTORY_TABLE).select('*'));
+    query.with(cteName, db(PRODUCT_HISTORY_TABLE).select('*'));
   }
 
   // Now we make selection
-  selectCamelCaseProductHistory(query, 'valid_bs_product_history_entry');
+  selectCamelCaseProductHistory(query, cteName);
 
   if (pr.includeMarkedAsDead) {
     // Join will only be made if this is true
@@ -240,13 +243,13 @@ export const searchProducts = async (pr: FullSearchProductRequest): Promise<Prod
   addIntervalQuery<{ min?: number; max?: number }>(query, pr.apk, 'min', 'max', 'apk');
 
   if (pr.articleNbr != null) {
-    query.whereIn('valid_bs_product_history_entry.bs_product_article_nbr', pr.articleNbr);
+    query.whereIn(`${cteName}.bs_product_article_nbr`, pr.articleNbr);
   }
 
   if (!pr.includeMarkedAsDead) {
     // Only select those not in the DEAD_LINK_TABLE
     query.whereNotIn(
-      'valid_bs_product_history_entry.bs_product_article_nbr',
+      `${cteName}.bs_product_article_nbr`,
       db(DEAD_LINK_TABLE).select('bs_product_article_nbr'),
     );
   } else {
@@ -254,7 +257,7 @@ export const searchProducts = async (pr: FullSearchProductRequest): Promise<Prod
     // outer here means if not found in dead links, mark as NULL
     query.leftOuterJoin(
       DEAD_LINK_TABLE,
-      'valid_bs_product_history_entry.bs_product_article_nbr',
+      `${cteName}.bs_product_article_nbr`,
       'dead_bs_product.bs_product_article_nbr',
     );
   }
@@ -262,12 +265,12 @@ export const searchProducts = async (pr: FullSearchProductRequest): Promise<Prod
   // Add reviews, outer means "If not there, insert null"
   query.leftOuterJoin(
     REVIEW_TABLE,
-    'valid_bs_product_history_entry.bs_product_article_nbr',
+    `${cteName}.bs_product_article_nbr`,
     'bs_product_review.bs_product_article_nbr',
   );
 
   // We make this selection for the valid dates
-  query.from('valid_bs_product_history_entry');
+  query.from(cteName);
 
   if (pr.sortOrder != null) {
     // Handle that we have timestamp in db but date in API

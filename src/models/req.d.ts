@@ -40,4 +40,4 @@ export type FullSearchProductRequest = BaseSearchProductRequest & {
   };
 };
 
-export type ToplistSearchProductRequest = BaseSearchProductRequest;
+export type TopListSearchProductRequest = BaseSearchProductRequest;
