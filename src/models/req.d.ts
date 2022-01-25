@@ -1,6 +1,6 @@
-export type SortableProductRequestKey = keyof Omit<ProductRequest, 'onlyNewest' | 'includeMarkedAsDead' | 'sortOrder' | 'maxItems' | 'offset'>
+import { ProductHistoryEntry } from './index';
 
-export type SearchProductsRequest = {
+type BaseProductRequest = {
   productName?: string[];
   category?: string[];
   subcategory?: string[];
@@ -21,16 +21,23 @@ export type SearchProductsRequest = {
     max?: number;
   };
   articleNbr?: number[];
-  onlyNewest?: boolean;
+}
+
+type BaseSearchProductRequest = BaseProductRequest & {
+  maxItems?: number;
+  offset?: number;
+  sortOrder?: {
+    key: keyof Omit<ProductHistoryEntry, 'markedAsDead', 'markedAsDeadDate'>;
+    order: 'asc' | 'desc';
+  };
+}
+
+export type FullSearchProductRequest = BaseSearchProductRequest & {
+  includeMarkedAsDead?: boolean;
   retrievedDate?: {
     start?: Date;
     end?: Date;
   };
-  includeMarkedAsDead?: boolean;
-  sortOrder?: {
-    key: SortableProductRequestKey;
-    order: 'asc' | 'desc';
-  };
-  maxItems?: number;
-  offset?: number;
 };
+
+export type ToplistSearchProductRequest = BaseSearchProductRequest;
