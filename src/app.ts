@@ -165,7 +165,7 @@ app.get('/bs/categories', async (_, res) => {
   }
 });
 
-app.get(
+app.post(
   '/bs/subcategories',
   body('categories').isArray().notEmpty(),
   async (req: Request, res: Response) => {
