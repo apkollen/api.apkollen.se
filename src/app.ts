@@ -1,8 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import { SearchProductsRequest } from './models/req';
-import { getProductReview, getProductHistory, searchProducts, getCurrentProductRank, getCurrentProductCount, getAllCategories, getSubcatFromCats } from './api';
+import {
+  getProductReview,
+  getProductHistory,
+  searchProducts,
+  getCurrentProductRank,
+  getCurrentProductCount,
+  getAllCategories,
+  getSubcatFromCats,
+} from './api';
 import { ProductHistoryEntry } from './models/index';
+import { body, query, validationResult } from 'express-validator';
 
 console.log('Starting startup...');
 
@@ -13,6 +22,8 @@ app.use(
     origin: '*',
   }),
 );
+
+app.use(express.json());
 
 app.post('/bs/products/search', async (req, res) => {
   const pr: SearchProductsRequest = req.query;
@@ -36,50 +47,65 @@ app.post('/bs/products/search', async (req, res) => {
   }
 });
 
-app.post('/bs/products/history', async (req, res) => {
-  try {
-  const { articleNbrs } = req?.query;
+app.post(
+  '/bs/products/history',
+  body('articleNbrs').exists().isArray().notEmpty(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
 
-  if (!Array.isArray(articleNbrs)) {
-    res.sendStatus(400);
-  }
+      const { articleNbrs } = req?.body;
 
-  const histories = await getProductHistory(articleNbrs as unknown as number[])
-  res.send(histories);
-  } catch (err) {
-    res.sendStatus(400);
-  }
-});
+      const histories = await getProductHistory(articleNbrs as unknown as number[]);
+      res.send(histories);
+    } catch (err) {
+      res.sendStatus(500);
+    }
+  },
+);
 
-app.post('/bs/products/review', async (req, res) => {
-  try {
-    const { articleNbrs } = req?.query;
+app.post(
+  '/bs/products/review',
+  body('articleNbrs').exists().isArray().notEmpty(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
 
-    if (!Array.isArray(articleNbrs)) {
+      const { articleNbrs } = req?.body;
+
+      const reviews = await getProductReview(articleNbrs as unknown as number[]);
+      res.send(reviews);
+    } catch (err) {
       res.sendStatus(400);
     }
-  
-    const reviews = await getProductReview(articleNbrs as unknown as number[])
-    res.send(reviews);
-  } catch (err) {
-    res.sendStatus(400);
-  }
-});
+  },
+);
 
-app.get('/bs/products/rank', async (req, res) => {
-  try {
-    const { articleNbrs } = req?.query;
+app.get(
+  '/bs/products/rank',
+  body('articleNbrs').exists().isArray().notEmpty(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
 
-    if (!Array.isArray(articleNbrs)) {
+      const { articleNbrs } = req?.body;
+
+      const ranks = await getCurrentProductRank(articleNbrs as unknown as number[]);
+      res.send(ranks);
+    } catch (err) {
       res.sendStatus(400);
     }
-  
-    const ranks = await getCurrentProductRank(articleNbrs as unknown as number[])
-    res.send(ranks);
-  } catch (err) {
-    res.sendStatus(400);
-  }
-});
+  },
+);
 
 app.get('/bs/products/count', async (_, res) => {
   try {
@@ -100,20 +126,12 @@ app.get('/bs/categories', async (_, res) => {
   }
 });
 
-app.get('/bs/subcategories', async (req, res) => {
+app.get('/bs/subcategories', body('categories').isArray().notEmpty(), async (req, res) => {
   try {
-    const { categories } = req?.query;
+    const { categories } = req?.body;
 
-    if (!Array.isArray(categories)) {
-      res.sendStatus(400);
-    } else {
-      if (categories.length === 0) {
-        res.send([]);
-      } else {
-        const subcategories = await getSubcatFromCats(categories as string[]);
-        res.send(subcategories);
-      }
-    }
+    const subcategories = await getSubcatFromCats(categories as string[]);
+    res.send(subcategories);
   } catch (err) {
     console.error(`Error when getting categories!:\n\t${JSON.stringify(err)}`);
     res.send(500);
