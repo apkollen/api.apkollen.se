@@ -1,5 +1,10 @@
 import { ProductHistoryEntry } from './index';
 
+/**
+ * Changes to these types _must_ be done along with appropriate changes
+ * to the validation schemas!
+ */
+
 type BaseProductRequest = {
   productName?: string[];
   category?: string[];
