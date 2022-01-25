@@ -31,7 +31,7 @@ app.post(
   '/bs/products/search/current',
   checkSchema(baseSearchProductRequestSchema),
   async (req: Request, res: Response) => {
-    const pr: TopListSearchProductRequest = req.query;
+    const pr: TopListSearchProductRequest = req.body;
 
     try {
       const rp = await searchTopList(pr);
@@ -51,7 +51,7 @@ app.post(
   '/bs/products/search/all',
   checkSchema(fullSearchProductRequestSchema),
   async (req: Request, res: Response) => {
-    const pr: FullSearchProductRequest = req.query;
+    const pr: FullSearchProductRequest = req.body;
 
     try {
       const rp = await searchAllHistoryEntries(pr);
@@ -76,7 +76,7 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { articleNbrs } = req?.body;
+    const { articleNbrs } = req.body;
 
     try {
       const histories = await getProductHistory(articleNbrs as unknown as number[]);
@@ -101,7 +101,7 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { articleNbrs } = req?.body;
+    const { articleNbrs } = req.body;
 
     try {
       const reviews = await getProductReview(articleNbrs as unknown as number[]);
@@ -126,7 +126,7 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { articleNbrs } = req?.body;
+    const { articleNbrs } = req.body;
 
     try {
       const ranks = await getCurrentProductRank(articleNbrs as unknown as number[]);
@@ -169,7 +169,7 @@ app.post(
   '/bs/subcategories',
   body('categories').isArray().notEmpty(),
   async (req: Request, res: Response) => {
-    const { categories } = req?.body;
+    const { categories } = req.body;
 
     try {
       const subcategories = await getSubcatFromCats(categories as string[]);
