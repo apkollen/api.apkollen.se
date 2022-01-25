@@ -371,7 +371,7 @@ export const getCurrentProductRank = async (
     .select('latest_retrievals.bs_product_article_nbr AS articleNbr')
     .select('rank')
     .whereIn('latest_retrievals.bs_product_article_nbr', articleNbrs)
-    .from('latest_retrievals').debug(true);
+    .from('latest_retrievals');
 
   let res: Record<number, number | null> = {};
   articleNbrs.forEach((i) => (res[i] = null));
