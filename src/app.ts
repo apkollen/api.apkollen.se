@@ -71,17 +71,22 @@ app.post(
   '/bs/products/history',
   body('articleNbrs').exists().isArray().notEmpty(),
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { articleNbrs } = req?.body;
+
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { articleNbrs } = req?.body;
-
       const histories = await getProductHistory(articleNbrs as unknown as number[]);
       res.send(histories);
     } catch (err) {
+      console.error(
+        `Error when trying to handle history query ${JSON.stringify(articleNbrs)} with error:\n\t${JSON.stringify(
+          err,
+        )}`,
+      );
       res.sendStatus(500);
     }
   },
@@ -91,38 +96,48 @@ app.post(
   '/bs/products/review',
   body('articleNbrs').exists().isArray().notEmpty(),
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { articleNbrs } = req?.body;
+
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { articleNbrs } = req?.body;
-
       const reviews = await getProductReview(articleNbrs as unknown as number[]);
       res.send(reviews);
     } catch (err) {
-      res.sendStatus(400);
+      console.error(
+        `Error when trying to handle review query ${JSON.stringify(articleNbrs)} with error:\n\t${JSON.stringify(
+          err,
+        )}`,
+      );
+      res.sendStatus(500);
     }
   },
 );
 
-app.get(
+app.post(
   '/bs/products/rank',
   body('articleNbrs').exists().isArray().notEmpty(),
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { articleNbrs } = req?.body;
+
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { articleNbrs } = req?.body;
-
       const ranks = await getCurrentProductRank(articleNbrs as unknown as number[]);
       res.send(ranks);
     } catch (err) {
-      res.sendStatus(400);
+      console.error(
+        `Error when trying to handle rank query ${JSON.stringify(articleNbrs)} with error:\n\t${JSON.stringify(
+          err,
+        )}`,
+      );
+      res.sendStatus(500);
     }
   },
 );
@@ -132,6 +147,11 @@ app.get('/bs/products/count', async (_, res) => {
     const count = await getCurrentProductCount();
     res.send([count]);
   } catch (err) {
+    console.error(
+      `Error when trying to handle get of count with error:\n\t${JSON.stringify(
+        err,
+      )}`,
+    );
     res.sendStatus(500);
   }
 });
@@ -141,6 +161,11 @@ app.get('/bs/categories', async (_, res) => {
     const categories = await getAllCategories();
     res.send(categories);
   } catch (err) {
+    console.error(
+      `Error when trying to handle get categories with error:\n\t${JSON.stringify(
+        err,
+      )}`,
+    );
     console.error(`Error when getting categories!:\n\t${JSON.stringify(err)}`);
     res.send(500);
   }
@@ -150,12 +175,17 @@ app.get(
   '/bs/subcategories',
   body('categories').isArray().notEmpty(),
   async (req: Request, res: Response) => {
-    try {
-      const { categories } = req?.body;
+    const { categories } = req?.body;
 
+    try {
       const subcategories = await getSubcatFromCats(categories as string[]);
       res.send(subcategories);
     } catch (err) {
+      console.error(
+        `Error when trying to handle subcat query for categories ${JSON.stringify(categories)} with error:\n\t${JSON.stringify(
+          err,
+        )}`,
+      );
       console.error(`Error when getting categories!:\n\t${JSON.stringify(err)}`);
       res.send(500);
     }
