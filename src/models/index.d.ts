@@ -11,6 +11,8 @@ export type ProductHistoryEntry = {
     retrievedDate: Date;
     markedAsDead: boolean;
     markedAsDeadDate?: Date;
+    currentRank?: number;
+    review?: ProductReview;
 };
 
 export type ProductReview = {
@@ -19,6 +21,3 @@ export type ProductReview = {
     reviewerName: string;
     createdDate: Date;
 };
-
-// A products current rank
-export type ProductRank = number;
