@@ -19,7 +19,7 @@ if (process.env.NODE_ENV === 'test') {
     // We define how to populate in-memory db with seed DB
     seeds: {
       directory: path.join(__dirname, '../test/db/seeds'),
-    }
+    },
   });
 } else {
   db = knex({
@@ -27,7 +27,7 @@ if (process.env.NODE_ENV === 'test') {
     connection: {
       filename: process.env.DB_PATH ?? '',
     },
-    useNullAsDefault: true
+    useNullAsDefault: true,
   });
 }
 

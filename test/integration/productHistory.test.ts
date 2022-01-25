@@ -9,7 +9,7 @@ beforeAll(async () => {
   // Setup in-memory DB
   await db.migrate.latest();
   await db.seed.run();
-})
+});
 
 describe('getting product history', () => {
   it('fails with 400 without articleNbrs', async () => {
@@ -19,7 +19,7 @@ describe('getting product history', () => {
   it('returns for valid article number', async () => {
     const res = await request(app)
       .post(BASE_ROUTE)
-      .send({ articleNbrs: [VALID_ARTICLE_NBR_0]} );
+      .send({ articleNbrs: [VALID_ARTICLE_NBR_0] });
 
     expect(res.statusCode).toEqual(200);
   });

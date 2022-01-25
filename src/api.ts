@@ -96,10 +96,7 @@ export const searchTopList = async (
       .select('*')
       .rowNumber('rank', db.raw('ORDER BY apk DESC')) // We need row numbers from complete valid CTE, not just articleNbrs
       .max('retrieved_timestamp')
-      .whereNotIn(
-        'bs_product_article_nbr',
-        db(DEAD_LINK_TABLE).select('bs_product_article_nbr'),
-      )
+      .whereNotIn('bs_product_article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
       .groupBy('bs_product_article_nbr'),
   );
 
@@ -362,10 +359,7 @@ export const getCurrentProductRank = async (
         .select('bs_product_article_nbr', 'apk')
         .rowNumber('rank', db.raw('ORDER BY apk DESC')) // We need row numbers from complete valid CTE, not just articleNbrs
         .max('retrieved_timestamp')
-        .whereNotIn(
-          'bs_product_article_nbr',
-          db(DEAD_LINK_TABLE).select('bs_product_article_nbr'),
-        )
+        .whereNotIn('bs_product_article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
         .groupBy('bs_product_article_nbr'),
     )
     .select('latest_retrievals.bs_product_article_nbr AS articleNbr')

@@ -26,7 +26,7 @@ type BaseProductRequest = {
     max?: number;
   };
   articleNbr?: number[];
-}
+};
 
 type BaseSearchProductRequest = BaseProductRequest & {
   maxItems?: number;
@@ -35,7 +35,7 @@ type BaseSearchProductRequest = BaseProductRequest & {
     key: keyof Omit<ProductHistoryEntry, 'markedAsDead', 'markedAsDeadDate'>;
     order: 'asc' | 'desc';
   };
-}
+};
 
 export type FullSearchProductRequest = BaseSearchProductRequest & {
   includeMarkedAsDead?: boolean;
