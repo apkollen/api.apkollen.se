@@ -14,8 +14,7 @@ beforeAll(async () => {
 
 describe('getting categories', () => {
   it('returns correct categories', async () => {
-    const res = await request(app)
-      .get(BASE_ROUTE);
+    const res = await request(app).get(BASE_ROUTE);
 
     expect(res.statusCode).toEqual(200);
     expect(res.body).toEqual(expect.arrayContaining(KNOWN_CATEGORIES));

@@ -14,11 +14,9 @@ beforeAll(async () => {
 
 describe('getting product count', () => {
   it('returns correct number of live products', async () => {
-    const res = await request(app)
-      .get(BASE_ROUTE);
+    const res = await request(app).get(BASE_ROUTE);
 
     expect(res.statusCode).toEqual(200);
     expect(res.body[0]).toEqual(KNOWN_COUNT);
   });
-
 });

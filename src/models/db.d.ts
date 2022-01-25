@@ -10,6 +10,6 @@ export type DatabaseProductHistoryEntry = Omit<
 };
 
 export type DatabaseProductReview = Omit<ProductReview, 'createdDate'> & {
-  articleNbr: number,
+  articleNbr: number;
   createdTimestamp: number;
 };
