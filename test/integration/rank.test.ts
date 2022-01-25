@@ -30,6 +30,14 @@ describe('getting product rank', () => {
     await request(app).post(BASE_ROUTE).send({}).expect(400);
   });
 
+  it('returns null for unknown articleNbrs, but known articleNbr still returns OK rank', async () => {
+    const res = await request(app).post(BASE_ROUTE).send({ articleNbrs: [666, KNOWN_RANKS[2].articleNbr]});
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body[666]).toBeNull();
+    expect(res.body[KNOWN_RANKS[2].articleNbr]).toEqual(KNOWN_RANKS[2].rank)
+  });
+
   it('returns correct rank for single product', async () => {
     const res = await request(app)
       .post(BASE_ROUTE)

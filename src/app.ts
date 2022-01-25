@@ -15,7 +15,7 @@ import {
 import { baseSearchProductRequestSchema, fullSearchProductRequestSchema } from './validation';
 import { body, checkSchema, validationResult } from 'express-validator';
 
-console.log('Starting startup...');
+if (process.env.NODE_ENV !== 'test') console.log('Starting startup...');
 
 export const app = express();
 
