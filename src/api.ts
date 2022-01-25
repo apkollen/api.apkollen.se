@@ -94,15 +94,17 @@ export const searchTopList = async (
     cteName,
     db(PRODUCT_HISTORY_TABLE)
       .select('*')
+      .rowNumber('rank', db.raw('ORDER BY apk DESC')) // We need row numbers from complete valid CTE, not just articleNbrs
       .max('retrieved_timestamp')
-      .groupBy(`${cteName}.bs_product_article_nbr`),
+      .whereNotIn(
+        'bs_product_article_nbr',
+        db(DEAD_LINK_TABLE).select('bs_product_article_nbr'),
+      )
+      .groupBy('bs_product_article_nbr'),
   );
 
   // Now we make selection
   selectCamelCaseProductHistory(query, cteName);
-
-  // We make additional selection for currentRank
-  query.rowNumber('currentRank', 'apk');
 
   if (pr.productName != null) {
     query.whereIlike(
@@ -134,12 +136,6 @@ export const searchTopList = async (
   if (pr.articleNbr != null) {
     query.whereIn(`${cteName}.bs_product_article_nbr`, pr.articleNbr);
   }
-
-  // Only select those not in the DEAD_LINK_TABLE
-  query.whereNotIn(
-    `${cteName}.bs_product_article_nbr`,
-    db(DEAD_LINK_TABLE).select('bs_product_article_nbr'),
-  );
 
   // Add reviews, outer means "If not there, insert null"
   query.leftOuterJoin(
@@ -364,17 +360,18 @@ export const getCurrentProductRank = async (
       'latest_retrievals',
       db(PRODUCT_HISTORY_TABLE)
         .select('bs_product_article_nbr', 'apk')
+        .rowNumber('rank', db.raw('ORDER BY apk DESC')) // We need row numbers from complete valid CTE, not just articleNbrs
         .max('retrieved_timestamp')
+        .whereNotIn(
+          'bs_product_article_nbr',
+          db(DEAD_LINK_TABLE).select('bs_product_article_nbr'),
+        )
         .groupBy('bs_product_article_nbr'),
     )
-    .rowNumber('rank', 'apk')
     .select('latest_retrievals.bs_product_article_nbr AS articleNbr')
+    .select('rank')
     .whereIn('latest_retrievals.bs_product_article_nbr', articleNbrs)
-    .from('latest_retrievals')
-    .whereNotIn(
-      'latest_retrievals.bs_product_article_nbr',
-      db(DEAD_LINK_TABLE).select('bs_product_article_nbr'),
-    );
+    .from('latest_retrievals').debug(true);
 
   let res: Record<number, number | null> = {};
   articleNbrs.forEach((i) => (res[i] = null));
