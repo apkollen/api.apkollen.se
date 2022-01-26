@@ -16,7 +16,7 @@ const REVIEW_TABLE = 'bs_product_review';
  * @param endKey
  * @param coloumnName
  */
-const addIntervalQuery = <T>(
+const addIntervalWhereToQuery = <T>(
   query: Knex.QueryBuilder,
   obj: T | undefined,
   startKey: keyof T,
@@ -33,6 +33,28 @@ const addIntervalQuery = <T>(
     }
   }
 };
+
+/**
+ * Adds where clause to chain multiple `WHERE LIKE`-statements together
+ * correctly
+ * @param query Query on which to add the chain
+ * @param column Name of the column to use
+ * @param values Values to be chained together
+ */
+const addMultipleWhereLikeToQuery = (query: Knex.QueryBuilder, column: string, values: string[] | undefined) => {
+  if (values != null) {
+    // Need to chain to ensure correct paranthesis placement
+    query.where((q) => {
+      values.forEach((n, i) => {
+        if (i == 0) {
+          q.whereLike(column, `%${n}%`)
+        } else {
+          q.or.whereLike(column, `%${n}%`)
+        }
+      })
+    })
+  }
+}
 
 /**
  * Select product history coloumn names as camelCase
@@ -103,19 +125,7 @@ export const searchTopList = async (
   // Now we make selection
   selectCamelCaseProductHistory(query, cteName);
 
-  if (pr.productName != null) {
-    // Need to chain to ensure correct paranthesis placement
-    const names = pr.productName; // To ensure scope
-    query.where((q) => {
-      names.forEach((n, i) => {
-        if (i == 0) {
-          q.whereIlike('name', `%${n}%`)
-        } else {
-          q.or.whereIlike('name', `${n}`)
-        }
-      })
-    })
-  }
+  addMultipleWhereLikeToQuery(query, 'product_name', pr.productName);
 
   if (pr.category != null) {
     query.whereIn('category', pr.category);
@@ -126,16 +136,16 @@ export const searchTopList = async (
   }
 
   // We add the interval queries
-  addIntervalQuery<{ min?: number; max?: number }>(
+  addIntervalWhereToQuery<{ min?: number; max?: number }>(
     query,
     pr.unitVolume,
     'min',
     'max',
     'unit_volume',
   );
-  addIntervalQuery<{ min?: number; max?: number }>(query, pr.unitPrice, 'min', 'max', 'unit_price');
-  addIntervalQuery<{ min?: number; max?: number }>(query, pr.alcvol, 'min', 'max', 'alcvol');
-  addIntervalQuery<{ min?: number; max?: number }>(query, pr.apk, 'min', 'max', 'apk');
+  addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.unitPrice, 'min', 'max', 'unit_price');
+  addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.alcvol, 'min', 'max', 'alcvol');
+  addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.apk, 'min', 'max', 'apk');
 
   if (pr.articleNbr != null) {
     query.whereIn(`${cteName}.bs_product_article_nbr`, pr.articleNbr);
@@ -216,19 +226,7 @@ export const searchAllHistoryEntries = async (
     query.select('dead_bs_product.marked_dead_timestamp AS markedAsDeadTimestamp');
   }
 
-  if (pr.productName != null) {
-    // Need to chain to ensure correct paranthesis placement
-    const names = pr.productName; // To ensure scope
-    query.where((q) => {
-      names.forEach((n, i) => {
-        if (i == 0) {
-          q.whereIlike('name', `%${n}%`)
-        } else {
-          q.or.whereIlike('name', `${n}`)
-        }
-      })
-    })
-  }
+  addMultipleWhereLikeToQuery(query, 'product_name', pr.productName);
 
   if (pr.category != null) {
     query.whereIn('category', pr.category);
@@ -238,16 +236,16 @@ export const searchAllHistoryEntries = async (
     query.whereIn('subcategory', pr.subcategory);
   }
 
-  addIntervalQuery<{ min?: number; max?: number }>(
+  addIntervalWhereToQuery<{ min?: number; max?: number }>(
     query,
     pr.unitVolume,
     'min',
     'max',
     'unit_volume',
   );
-  addIntervalQuery<{ min?: number; max?: number }>(query, pr.unitPrice, 'min', 'max', 'unit_price');
-  addIntervalQuery<{ min?: number; max?: number }>(query, pr.alcvol, 'min', 'max', 'alcvol');
-  addIntervalQuery<{ min?: number; max?: number }>(query, pr.apk, 'min', 'max', 'apk');
+  addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.unitPrice, 'min', 'max', 'unit_price');
+  addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.alcvol, 'min', 'max', 'alcvol');
+  addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.apk, 'min', 'max', 'apk');
 
   if (pr.articleNbr != null) {
     query.whereIn(`${cteName}.bs_product_article_nbr`, pr.articleNbr);
