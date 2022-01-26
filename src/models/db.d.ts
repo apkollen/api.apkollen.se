@@ -12,7 +12,7 @@ export type DatabaseProductHistoryEntry = Omit<
   // From ProductReview
   score?: number;
   text?: string;
-  reviewerName?: string,
+  reviewerName?: string;
   createdTimestamp?: number;
 };
 
