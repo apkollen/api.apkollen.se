@@ -9,27 +9,27 @@ const DEAD_LINK_TABLE = 'dead_bs_product';
 const REVIEW_TABLE = 'bs_product_review';
 
 /**
- * Adds a query for an interval
- * @param query
- * @param obj
- * @param startKey
- * @param endKey
- * @param coloumnName
+ * Adds a where statement for an interval to a query
+ * @param query Query on which to add the clause
+ * @param obj Object that contains interval
+ * @param startKey Key of start of interval
+ * @param endKey Key of end of interval
+ * @param columnName Name of the column to use
  */
 const addIntervalWhereToQuery = <T>(
   query: Knex.QueryBuilder,
   obj: T | undefined,
   startKey: keyof T,
   endKey: keyof T,
-  coloumnName: string,
+  columnName: string,
 ) => {
   if (obj != null) {
     if (obj[startKey] != null) {
-      query.where(coloumnName, '<=', startKey as number);
+      query.where(columnName, '<=', startKey as number);
     }
 
     if (obj[endKey] != null) {
-      query.where(coloumnName, '>=', endKey as number);
+      query.where(columnName, '>=', endKey as number);
     }
   }
 };
@@ -38,18 +38,18 @@ const addIntervalWhereToQuery = <T>(
  * Adds where clause to chain multiple `WHERE LIKE`-statements together
  * correctly
  * @param query Query on which to add the chain
- * @param column Name of the column to use
+ * @param columnName Name of the column to use
  * @param values Values to be chained together
  */
-const addMultipleWhereLikeToQuery = (query: Knex.QueryBuilder, column: string, values: string[] | undefined) => {
+const addMultipleWhereLikeToQuery = (query: Knex.QueryBuilder, columnName: string, values: string[] | undefined) => {
   if (values != null) {
     // Need to chain to ensure correct paranthesis placement
     query.where((q) => {
       values.forEach((n, i) => {
-        if (i == 0) {
-          q.whereLike(column, `%${n}%`)
+        if (i === 0) {
+          q.whereLike(columnName, `%${n}%`)
         } else {
-          q.or.whereLike(column, `%${n}%`)
+          q.or.whereLike(columnName, `%${n}%`)
         }
       })
     })
