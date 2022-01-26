@@ -38,9 +38,7 @@ app.post(
       res.send(rp);
     } catch (err) {
       console.error(
-        `Error when trying to handle query ${JSON.stringify(pr)} with error:\n\t${JSON.stringify(
-          err,
-        )}`,
+        `Error when trying to handle query ${JSON.stringify(pr)} with error:\n\t${err}`,
       );
       res.sendStatus(500);
     }
@@ -58,9 +56,8 @@ app.post(
       res.send(rp);
     } catch (err) {
       console.error(
-        `Error when trying to handle query ${JSON.stringify(pr)} with error:\n\t${JSON.stringify(
-          err,
-        )}`,
+        `Error when trying to handle query ${JSON.stringify(pr)} with error:\n\t${
+          err}`,
       );
       res.sendStatus(500);
     }
@@ -85,7 +82,7 @@ app.post(
       console.error(
         `Error when trying to handle history query ${JSON.stringify(
           articleNbrs,
-        )} with error:\n\t${JSON.stringify(err)}`,
+        )} with error:\n\t${err}`,
       );
       res.sendStatus(500);
     }
@@ -110,7 +107,7 @@ app.post(
       console.error(
         `Error when trying to handle review query ${JSON.stringify(
           articleNbrs,
-        )} with error:\n\t${JSON.stringify(err)}`,
+        )} with error:\n\t${err}`,
       );
       res.sendStatus(500);
     }
@@ -135,7 +132,7 @@ app.post(
       console.error(
         `Error when trying to handle rank query ${JSON.stringify(
           articleNbrs,
-        )} with error:\n\t${JSON.stringify(err)}`,
+        )} with error:\n\t${err}`,
       );
       res.sendStatus(500);
     }
@@ -147,7 +144,7 @@ app.get('/bs/products/count', async (_, res) => {
     const count = await getCurrentProductCount();
     res.send([count]);
   } catch (err) {
-    console.error(`Error when trying to handle get of count with error:\n\t${JSON.stringify(err)}`);
+    console.error(`Error when trying to handle get of count with error:\n\t${err}`);
     res.sendStatus(500);
   }
 });
@@ -157,10 +154,7 @@ app.get('/bs/categories', async (_, res) => {
     const categories = await getAllCategories();
     res.send(categories);
   } catch (err) {
-    console.error(
-      `Error when trying to handle get categories with error:\n\t${JSON.stringify(err)}`,
-    );
-    console.error(`Error when getting categories!:\n\t${JSON.stringify(err)}`);
+    console.error(`Error when getting categories:\n\t${err}`);
     res.send(500);
   }
 });
@@ -180,12 +174,7 @@ app.post(
       const subcategories = await getSubcatFromCats(categories as string[]);
       res.send(subcategories);
     } catch (err) {
-      console.error(
-        `Error when trying to handle subcat query for categories ${JSON.stringify(
-          categories,
-        )} with error:\n\t${JSON.stringify(err)}`,
-      );
-      console.error(`Error when getting categories!:\n\t${JSON.stringify(err)}`);
+      console.error(`Error when getting subcategories:\n\t${err}`);
       res.send(500);
     }
   },
