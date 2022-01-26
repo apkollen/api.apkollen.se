@@ -34,8 +34,8 @@ app.post(
     const pr: TopListSearchProductRequest = req.body;
 
     // try {
-      const rp = await searchTopList(pr);
-      res.send(rp);
+    const rp = await searchTopList(pr);
+    res.send(rp);
     // } catch (err) {
     //   console.error(
     //     `Error when trying to handle query ${JSON.stringify(pr)} with error:\n\t${JSON.stringify(

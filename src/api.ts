@@ -41,20 +41,24 @@ const addIntervalWhereToQuery = <T>(
  * @param columnName Name of the column to use
  * @param values Values to be chained together
  */
-const addMultipleWhereLikeToQuery = (query: Knex.QueryBuilder, columnName: string, values: string[] | undefined) => {
+const addMultipleWhereLikeToQuery = (
+  query: Knex.QueryBuilder,
+  columnName: string,
+  values: string[] | undefined,
+) => {
   if (values != null) {
     // Need to chain to ensure correct paranthesis placement
     query.where((q) => {
       values.forEach((n, i) => {
         if (i === 0) {
-          q.whereLike(columnName, `%${n}%`)
+          q.whereLike(columnName, `%${n}%`);
         } else {
-          q.or.whereLike(columnName, `%${n}%`)
+          q.or.whereLike(columnName, `%${n}%`);
         }
-      })
-    })
+      });
+    });
   }
-}
+};
 
 /**
  * Select product history coloumn names as camelCase
@@ -143,7 +147,13 @@ export const searchTopList = async (
     'max',
     'unit_volume',
   );
-  addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.unitPrice, 'min', 'max', 'unit_price');
+  addIntervalWhereToQuery<{ min?: number; max?: number }>(
+    query,
+    pr.unitPrice,
+    'min',
+    'max',
+    'unit_price',
+  );
   addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.alcvol, 'min', 'max', 'alcvol');
   addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.apk, 'min', 'max', 'apk');
 
@@ -243,7 +253,13 @@ export const searchAllHistoryEntries = async (
     'max',
     'unit_volume',
   );
-  addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.unitPrice, 'min', 'max', 'unit_price');
+  addIntervalWhereToQuery<{ min?: number; max?: number }>(
+    query,
+    pr.unitPrice,
+    'min',
+    'max',
+    'unit_price',
+  );
   addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.alcvol, 'min', 'max', 'alcvol');
   addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.apk, 'min', 'max', 'apk');
 
