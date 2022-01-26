@@ -33,17 +33,17 @@ app.post(
   async (req: Request, res: Response) => {
     const pr: TopListSearchProductRequest = req.body;
 
-    try {
+    // try {
       const rp = await searchTopList(pr);
       res.send(rp);
-    } catch (err) {
-      console.error(
-        `Error when trying to handle query ${JSON.stringify(pr)} with error:\n\t${JSON.stringify(
-          err,
-        )}`,
-      );
-      res.sendStatus(500);
-    }
+    // } catch (err) {
+    //   console.error(
+    //     `Error when trying to handle query ${JSON.stringify(pr)} with error:\n\t${JSON.stringify(
+    //       err,
+    //     )}`,
+    //   );
+    //   res.sendStatus(500);
+    // }
   },
 );
 

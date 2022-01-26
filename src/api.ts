@@ -104,10 +104,17 @@ export const searchTopList = async (
   selectCamelCaseProductHistory(query, cteName);
 
   if (pr.productName != null) {
-    query.whereIlike(
-      'name',
-      pr.productName.map((n) => `%${n}%`),
-    );
+    // Need to chain to ensure correct paranthesis placement
+    const names = pr.productName; // To ensure scope
+    query.where((q) => {
+      names.forEach((n, i) => {
+        if (i == 0) {
+          q.whereIlike('name', `%${n}%`)
+        } else {
+          q.or.whereIlike('name', `${n}`)
+        }
+      })
+    })
   }
 
   if (pr.category != null) {
@@ -210,10 +217,17 @@ export const searchAllHistoryEntries = async (
   }
 
   if (pr.productName != null) {
-    query.whereIlike(
-      'name',
-      pr.productName.map((n) => `%${n}%`),
-    );
+    // Need to chain to ensure correct paranthesis placement
+    const names = pr.productName; // To ensure scope
+    query.where((q) => {
+      names.forEach((n, i) => {
+        if (i == 0) {
+          q.whereIlike('name', `%${n}%`)
+        } else {
+          q.or.whereIlike('name', `${n}`)
+        }
+      })
+    })
   }
 
   if (pr.category != null) {
