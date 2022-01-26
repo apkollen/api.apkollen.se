@@ -11,7 +11,7 @@ import {
   getCurrentProductCount,
   getAllCategories,
   getSubcatFromCats,
-} from './api';
+} from './api/api';
 import { baseSearchProductRequestSchema, fullSearchProductRequestSchema } from './validation';
 import { body, checkSchema, validationResult } from 'express-validator';
 
