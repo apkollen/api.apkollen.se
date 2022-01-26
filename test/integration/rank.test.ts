@@ -26,12 +26,14 @@ beforeAll(async () => {
 });
 
 describe('getting product rank', () => {
+  const r = request(app);
+
   it('fails with 400 without articleNbrs', async () => {
-    await request(app).post(BASE_ROUTE).send({}).expect(400);
+    await r.post(BASE_ROUTE).send({}).expect(400);
   });
 
   it('returns null for unknown articleNbrs, but known articleNbr still returns OK rank', async () => {
-    const res = await request(app)
+    const res = await r
       .post(BASE_ROUTE)
       .send({ articleNbrs: [666, KNOWN_RANKS[2].articleNbr] });
 
@@ -41,7 +43,7 @@ describe('getting product rank', () => {
   });
 
   it('returns correct rank for single product', async () => {
-    const res = await request(app)
+    const res = await r
       .post(BASE_ROUTE)
       .send({ articleNbrs: [KNOWN_RANKS[1].articleNbr] });
 
@@ -50,7 +52,7 @@ describe('getting product rank', () => {
   });
 
   it('returns correct rank for multiple products', async () => {
-    const res = await request(app)
+    const res = await r
       .post(BASE_ROUTE)
       .send({ articleNbrs: KNOWN_RANKS.map((a) => a.articleNbr) });
 

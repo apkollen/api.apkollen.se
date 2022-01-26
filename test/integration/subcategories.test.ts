@@ -28,12 +28,14 @@ beforeAll(async () => {
 });
 
 describe('getting subcategories', () => {
+  const r = request(app);
+
   it('fails with 400 without category', async () => {
-    await request(app).post(BASE_ROUTE).send({}).expect(400);
+    await r.post(BASE_ROUTE).send({}).expect(400);
   });
 
   it('returns empty list for unknown categories, but known categories still returns OK rank', async () => {
-    const res = await request(app)
+    const res = await r
       .post(BASE_ROUTE)
       .send({ categories: [FAKE_CATEGORY, KNOWN_SUBCATS[1].category] });
 
@@ -45,7 +47,7 @@ describe('getting subcategories', () => {
   });
 
   it('returns correct subcategory for single category', async () => {
-    const res = await request(app)
+    const res = await r
       .post(BASE_ROUTE)
       .send({ categories: [KNOWN_SUBCATS[2].category] });
 
@@ -56,7 +58,7 @@ describe('getting subcategories', () => {
   });
 
   it('returns correct subcategories for multiple categories', async () => {
-    const res = await request(app)
+    const res = await r
       .post(BASE_ROUTE)
       .send({ categories: KNOWN_SUBCATS.map((e) => e.category) });
 
