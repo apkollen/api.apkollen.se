@@ -43,6 +43,17 @@ exports.up = async function(knex) {
         PRIMARY KEY("bs_product_article_nbr")
     );
   `);
+
+  await knex.raw(`
+    CREATE VIEW IF NOT EXISTS current_bs_top_list AS
+      SELECT *, ROW_NUMBER() OVER(ORDER BY apk DESC) AS rank, MAX(retrieved_timestamp)
+      FROM bs_product_history_entry
+      WHERE bs_product_article_nbr NOT IN (
+          SELECT bs_product_article_nbr
+          FROM dead_bs_product
+      )
+      GROUP BY bs_product_article_nbr;
+  `);
 }
 
 exports.down = async function(knex) {

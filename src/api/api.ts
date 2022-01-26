@@ -12,6 +12,7 @@ import {
 const PRODUCT_HISTORY_TABLE = 'bs_product_history_entry';
 const DEAD_LINK_TABLE = 'dead_bs_product';
 const REVIEW_TABLE = 'bs_product_review';
+const TOP_LIST_VIEW = 'current_bs_top_list';
 
 /**
  * Searches the database for only the latest entries of
@@ -23,25 +24,10 @@ const REVIEW_TABLE = 'bs_product_review';
 export const searchTopList = async (
   pr: TopListSearchProductRequest,
 ): Promise<ProductHistoryEntry[]> => {
-  const query = db.queryBuilder<DatabaseProductHistoryEntry>();
-
-  // Name of our CTE to keep track of only latest retrievals
-  const cteName = 'latest_product_entries';
-
-  // We only want latest, so we create CTE of latest instance
-  // of each product
-  query.with(
-    cteName,
-    db(PRODUCT_HISTORY_TABLE)
-      .select('*')
-      .rowNumber('rank', db.raw('ORDER BY apk DESC')) // We need row numbers from complete valid CTE, not just articleNbrs
-      .max('retrieved_timestamp')
-      .whereNotIn('bs_product_article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
-      .groupBy('bs_product_article_nbr'),
-  );
+  const query = db<DatabaseProductHistoryEntry>(TOP_LIST_VIEW);
 
   // Now we make selection
-  selectCamelCaseProductHistory(query, cteName);
+  selectCamelCaseProductHistory(query, TOP_LIST_VIEW, true, true);
 
   addMultipleWhereLikeToQuery(query, 'product_name', pr.productName);
 
@@ -72,18 +58,15 @@ export const searchTopList = async (
   addIntervalWhereToQuery<{ min?: number; max?: number }>(query, pr.apk, 'min', 'max', 'apk');
 
   if (pr.articleNbr != null) {
-    query.whereIn(`${cteName}.bs_product_article_nbr`, pr.articleNbr);
+    query.whereIn(`${TOP_LIST_VIEW}.bs_product_article_nbr`, pr.articleNbr);
   }
 
   // Add reviews, outer means "If not there, insert null"
   query.leftOuterJoin(
     REVIEW_TABLE,
-    `${cteName}.bs_product_article_nbr`,
+    `${TOP_LIST_VIEW}.bs_product_article_nbr`,
     'bs_product_review.bs_product_article_nbr',
   );
-
-  // We make this selection from the CTE
-  query.from(cteName);
 
   if (pr.sortOrder != null) {
     // Handle that we have timestamp in db but date in API
@@ -143,7 +126,7 @@ export const searchAllHistoryEntries = async (
   }
 
   // Now we make selection
-  selectCamelCaseProductHistory(query, cteName);
+  selectCamelCaseProductHistory(query, cteName, false, true);
 
   if (pr.includeMarkedAsDead) {
     // Join will only be made if this is true
@@ -237,7 +220,7 @@ export const getProductHistory = async (
   articleNbrs: number[],
 ): Promise<Record<number, ProductHistoryEntry[]>> => {
   const query = db<DatabaseProductHistoryEntry>(PRODUCT_HISTORY_TABLE);
-  selectCamelCaseProductHistory(query, PRODUCT_HISTORY_TABLE);
+  selectCamelCaseProductHistory(query, PRODUCT_HISTORY_TABLE, false, false);
   query.whereIn('articleNbr', articleNbrs).orderBy('retrievedTimestamp');
 
   const rows = await query;
@@ -293,26 +276,15 @@ export const getProductReview = async (
 export const getCurrentProductRank = async (
   articleNbrs: number[],
 ): Promise<Record<number, number | null>> => {
-  const rows = await db
-    .queryBuilder()
-    .with(
-      'latest_retrievals',
-      db(PRODUCT_HISTORY_TABLE)
-        .select('bs_product_article_nbr', 'apk')
-        .rowNumber('rank', db.raw('ORDER BY apk DESC')) // We need row numbers from complete valid CTE, not just articleNbrs
-        .max('retrieved_timestamp')
-        .whereNotIn('bs_product_article_nbr', db(DEAD_LINK_TABLE).select('bs_product_article_nbr'))
-        .groupBy('bs_product_article_nbr'),
-    )
-    .select('latest_retrievals.bs_product_article_nbr AS articleNbr')
-    .select('rank')
-    .whereIn('latest_retrievals.bs_product_article_nbr', articleNbrs)
-    .from('latest_retrievals');
+  const rows = await db<DatabaseProductHistoryEntry>(TOP_LIST_VIEW)
+    .select(`${TOP_LIST_VIEW}.bs_product_article_nbr AS articleNbr`)
+    .select('rank AS currentRank')
+    .whereIn(`${TOP_LIST_VIEW}.bs_product_article_nbr`, articleNbrs);
 
   let res: Record<number, number | null> = {};
   articleNbrs.forEach((i) => (res[i] = null));
   rows.forEach((row) => {
-    res[row.articleNbr] = row.rank;
+    res[row.articleNbr] = row.currentRank;
   });
 
   return res;
@@ -322,21 +294,8 @@ export const getCurrentProductRank = async (
  * Returns current count of products not marked as dead
  */
 export const getCurrentProductCount = async (): Promise<number | undefined> => {
-  const row = await db
-    .queryBuilder()
-    .with(
-      'latest_retrievals',
-      db(PRODUCT_HISTORY_TABLE)
-        .select('bs_product_article_nbr')
-        .max('retrieved_timestamp')
-        .groupBy('bs_product_article_nbr'),
-    )
+  const row = await db<DatabaseProductHistoryEntry>(TOP_LIST_VIEW)
     .count<Record<string, number>>()
-    .from('latest_retrievals')
-    .whereNotIn(
-      'latest_retrievals.bs_product_article_nbr',
-      db(DEAD_LINK_TABLE).select('bs_product_article_nbr'),
-    )
     .first();
 
   return row != null ? row['count(*)'] : undefined;
