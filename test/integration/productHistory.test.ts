@@ -12,12 +12,14 @@ beforeAll(async () => {
 });
 
 describe('getting product history', () => {
+  const r = request(app);
+
   it('fails with 400 without articleNbrs', async () => {
-    await request(app).post(BASE_ROUTE).send({}).expect(400);
+    await r.post(BASE_ROUTE).send({}).expect(400);
   });
 
   it('returns for valid article number', async () => {
-    const res = await request(app)
+    const res = await r
       .post(BASE_ROUTE)
       .send({ articleNbrs: [VALID_ARTICLE_NBR_0] });
 
