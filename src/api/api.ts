@@ -307,13 +307,23 @@ export const getAllCategories = async (): Promise<string[]> => {
 };
 
 /**
- * Returns all subcategories to the categories provided
+ * Returns _all_ subcategories to the categories provided, as a Record
+ * matching each category with their subcategories
  * @param categories List of category names
  */
-export const getSubcatFromCats = async (categories: string[]): Promise<string[]> => {
+export const getSubcatFromCats = async (
+  categories: string[],
+): Promise<Record<string, string[]>> => {
   const rows = await db<DatabaseProductHistoryEntry>(PRODUCT_HISTORY_TABLE)
-    .select('subcategory')
+    .select('category', 'subcategory') // Any subcategory will only ever have one parent category
     .distinct()
     .whereIn('category', categories);
-  return rows.map((r) => r.subcategory);
+
+  let res: Record<string, string[]> = {};
+  categories.forEach((c) => (res[c] = []));
+  rows.forEach((row) => {
+    res[row.category].push(row.subcategory);
+  });
+
+  return res;
 };
