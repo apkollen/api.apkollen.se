@@ -31,6 +31,7 @@ if (process.env.NODE_ENV === 'test') {
   });
 }
 
+// Ensure foreign keys are checked
 (async () => await db.raw('PRAGMA foreign_keys = ON;'))();
 
 export default db;
