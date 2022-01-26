@@ -84,9 +84,10 @@ export const selectCamelCaseProductHistory = (
 
   if (withReview) {
     query
-      .select('score, text')
-      .select('bs_product_review.reviewer_name AS reviewerName')
-      .select('bs_product_review.created_timestamp AS createdTimestamp');
+      .select('review_score AS score')
+      .select('review_text AS text')
+      .select('reviewer_name AS reviewerName')
+      .select('review_created_timestamp AS createdTimestamp');
   }
 };
 
