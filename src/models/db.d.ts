@@ -7,6 +7,13 @@ export type DatabaseProductHistoryEntry = Omit<
   // ISO timestamp
   retrievedTimestamp: number;
   markedAsDeadTimestamp?: number;
+  currentRank?: number;
+
+  // From ProductReview
+  score?: number;
+  text?: string;
+  reviewerName?: string,
+  createdTimestamp?: number;
 };
 
 export type DatabaseProductReview = Omit<ProductReview, 'createdDate'> & {
