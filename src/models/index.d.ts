@@ -24,7 +24,7 @@ export type ProductHistoryEntry = {
   // Current ranking of all BorderShop products. Only
   // valid if this is the latest history entry.
   currentRank?: number;
-  review?: ProductReview;
+  review: ProductReview | null;
 };
 
 export type ProductReview = {
