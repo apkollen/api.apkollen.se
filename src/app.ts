@@ -78,17 +78,17 @@ app.post(
 
     const { articleNbrs } = req.body;
 
-    try {
+    // try {
       const histories = await getProductHistory(articleNbrs as unknown as number[]);
       res.send(histories);
-    } catch (err) {
-      console.error(
-        `Error when trying to handle history query ${JSON.stringify(
-          articleNbrs,
-        )} with error:\n\t${JSON.stringify(err)}`,
-      );
-      res.sendStatus(500);
-    }
+    // } catch (err) {
+    //   console.error(
+    //     `Error when trying to handle history query ${JSON.stringify(
+    //       articleNbrs,
+    //     )} with error:\n\t${JSON.stringify(err)}`,
+    //   );
+    //   res.sendStatus(500);
+    // }
   },
 );
 

@@ -59,8 +59,15 @@ export const addMultipleWhereLikeToQuery = (
  * review information
  * @param query Query from which to select
  * @param fromTable Table in which `bs_product_article_nbr` is to be taken
+ * @param withRank If rank should be selected
+ * @param withReview If review information should be selected
  */
-export const selectCamelCaseProductHistory = (query: Knex.QueryBuilder, fromTable: string) => {
+export const selectCamelCaseProductHistory = (
+  query: Knex.QueryBuilder,
+  fromTable: string,
+  withRank: boolean,
+  withReview: boolean,
+) => {
   query
     .select('url')
     .select('product_name AS productName')
@@ -69,10 +76,18 @@ export const selectCamelCaseProductHistory = (query: Knex.QueryBuilder, fromTabl
     .select('unit_price AS unitPrice')
     .select('alcvol', 'apk')
     .select(`${fromTable}.bs_product_article_nbr AS articleNbr`)
-    .select('retrieved_timestamp AS retrievedTimestamp')
-    .select('score, text')
-    .select('bs_product_review.reviewer_name AS reviewerName')
-    .select('bs_product_review.created_timestamp AS createdTimestamp');
+    .select('retrieved_timestamp AS retrievedTimestamp');
+
+  if (withRank) {
+    query.select('rank AS currentRank');
+  }
+
+  if (withReview) {
+    query
+      .select('score, text')
+      .select('bs_product_review.reviewer_name AS reviewerName')
+      .select('bs_product_review.created_timestamp AS createdTimestamp');
+  }
 };
 
 /**
