@@ -92,7 +92,7 @@ export const selectCamelCaseProductHistory = (
 };
 
 /**
- * Converts a entry in the database to actual history entry
+ * Converts an entry in the database to actual history entry
  * @param dbpr Result from database
  */
 export const reduceDbPostHistoryEntry = (dbpr: DbProductHistoryEntry): ProductHistoryEntry => {
