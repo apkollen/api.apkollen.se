@@ -39,7 +39,7 @@ exports.seed = async function (knex) {
     INSERT INTO bs_product_history_entry VALUES('https://www.bordershop.com/se/ol-cider/dansk-ol/harboe-bear-beer-strong-77-2033433','Harboe Bear Beer Strong 7,7%','Öl & Cider','Dansk Öl',32.999999999999999999,2.5499999999999998223,7.7000000000000001776,9.9740932642487045711,2033433,'2022-01-24 20:54:37')`),
     knex.raw(`
     INSERT INTO bs_product_history_entry VALUES('https://www.bordershop.com/se/vin/vitt-vin/sydafrika/drostdy-hof-chenin-blanc-steen-2034031','Drostdy-Hof Chenin Blanc Steen','Vin','Vitt vin',300.0,61.170000000000001707,12.0,5.8852378616969103219,2034031,'2022-01-24 20:54:52')`),
-    knex.raw(`INSERT INTO dead_bs_product VALUES(2034031,'2022-01-24 20:57:49')`),
+    knex.raw(`INSERT INTO dead_bs_product VALUES(2034031,'2022-01-24 20:57:49', NULL)`),
     knex.raw(`
     INSERT INTO bs_product_review VALUES(2110205,4.5,replace('Helt enkelt bäst.\nSmaken är som baken, smakar mest skit.','\n',char(10)),'Emil','2022-01-19 21:59:07')`),
   ]);
