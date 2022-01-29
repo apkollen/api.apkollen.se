@@ -75,13 +75,11 @@ exports.up = async function(knex) {
 
   await knex.raw(`
     CREATE VIEW IF NOT EXISTS current_bs_top_list AS
-      SELECT *, ROW_NUMBER() OVER(ORDER BY apk DESC) AS rank, MAX(retrieved_timestamp)
+      SELECT *, ROW_NUMBER() OVER(ORDER BY apk DESC) AS rank
       FROM bs_product_history_entry
-      WHERE bs_product_article_nbr NOT IN (
-          SELECT bs_product_article_nbr
-          FROM dead_bs_product
-      )
-      GROUP BY bs_product_article_nbr;
+      WHERE bs_product_article_nbr NOT IN current_dead_bs_product_article_nbr
+      GROUP BY bs_product_article_nbr
+      HAVING MAX(retrieved_timestamp);
   `);
 
   await knex.raw(`
