@@ -1,4 +1,4 @@
-import request from 'supertest';
+import request = require('supertest');
 import app from '../../src/app';
 import db from '../../src/db';
 
@@ -39,9 +39,11 @@ describe('getting subcategories', () => {
       .post(BASE_ROUTE)
       .send({ categories: [FAKE_CATEGORY, KNOWN_SUBCATS[1].category] });
 
+    const resBody = res.body as Record<string, string[]>
+
     expect(res.statusCode).toEqual(200);
-    expect(res.body[FAKE_CATEGORY]).toEqual([]);
-    expect(res.body[KNOWN_SUBCATS[1].category]).toEqual(
+    expect(resBody[FAKE_CATEGORY]).toEqual([]);
+    expect(resBody[KNOWN_SUBCATS[1].category]).toEqual(
       expect.arrayContaining(KNOWN_SUBCATS[1].subcategories),
     );
   });
@@ -51,8 +53,10 @@ describe('getting subcategories', () => {
       .post(BASE_ROUTE)
       .send({ categories: [KNOWN_SUBCATS[2].category] });
 
+    const resBody = res.body as Record<string, string[]>
+
     expect(res.statusCode).toEqual(200);
-    expect(res.body[KNOWN_SUBCATS[2].category]).toEqual(
+    expect(resBody[KNOWN_SUBCATS[2].category]).toEqual(
       expect.arrayContaining(KNOWN_SUBCATS[2].subcategories),
     );
   });
@@ -62,9 +66,11 @@ describe('getting subcategories', () => {
       .post(BASE_ROUTE)
       .send({ categories: KNOWN_SUBCATS.map((e) => e.category) });
 
+    const resBody = res.body as Record<string, string[]>
+
     expect(res.statusCode).toEqual(200);
     KNOWN_SUBCATS.forEach((e) => {
-      expect(res.body[e.category]).toEqual(expect.arrayContaining(e.subcategories));
+      expect(resBody[e.category]).toEqual(expect.arrayContaining(e.subcategories));
     });
   });
 });

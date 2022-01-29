@@ -1,4 +1,4 @@
-import request from 'supertest';
+import request = require('supertest');
 
 import app from '../../src/app';
 import db from '../../src/db';
@@ -6,7 +6,7 @@ import { ProductReview } from '../../src/models';
 
 const BASE_ROUTE = '/bs/products/review';
 
-const KNOWN_REVIEWS: { articleNbr: number; review: any | null }[] = [
+const KNOWN_REVIEWS: { articleNbr: number; review: ProductReview | null }[] = [
   {
     articleNbr: 2033433, // Bear Beer
     review: null,
@@ -36,15 +36,18 @@ describe('getting product review', () => {
   const r = request(app);
 
   /**
-   * Converts all instances of ISO
+   * Converts all instances of ISO string
+   * in response body to actual `Date`
    * @param resBody
    */
-  const convertResDateString = (resBody: Record<string, Partial<ProductReview> | null>) => {
+  const convertResDateString = (resBody: Record<number, ProductReview | null>) => {
     if (resBody == null) return;
-    Object.keys(resBody).forEach((k) => {
-      if (resBody[k] == null) return;
-      else if (resBody[k].createdDate != null) {
-        resBody[k].createdDate = new Date(resBody[k].createdDate);
+    (Object.keys(resBody) as unknown as Array<number>).forEach((k) => {
+      const rec = resBody[k];
+      if (rec != null) {
+        if (rec.createdDate != null) {
+          rec.createdDate = new Date(rec.createdDate);
+        }
       }
     });
   };
@@ -56,20 +59,24 @@ describe('getting product review', () => {
   it('returns null for unknown articleNbrs, but known articleNbr still returns OK review', async () => {
     const res = await r.post(BASE_ROUTE).send({ articleNbrs: [666, KNOWN_REVIEWS[1].articleNbr] });
 
-    convertResDateString(res.body);
+    const resBody = res.body as Record<number, ProductReview | null>;
+
+    convertResDateString(resBody);
 
     expect(res.statusCode).toEqual(200);
-    expect(res.body[666]).toBeNull();
-    expect(res.body[KNOWN_REVIEWS[1].articleNbr]).toEqual(KNOWN_REVIEWS[1].review);
+    expect(resBody[666]).toBeNull();
+    expect(resBody[KNOWN_REVIEWS[1].articleNbr]).toEqual(KNOWN_REVIEWS[1].review);
   });
 
   it('returns correct review for single product', async () => {
     const res = await r.post(BASE_ROUTE).send({ articleNbrs: [KNOWN_REVIEWS[1].articleNbr] });
 
-    convertResDateString(res.body);
+    const resBody = res.body as Record<number, ProductReview | null>;
+
+    convertResDateString(resBody);
 
     expect(res.statusCode).toEqual(200);
-    expect(res.body[KNOWN_REVIEWS[1].articleNbr]).toEqual(KNOWN_REVIEWS[1].review);
+    expect(resBody[KNOWN_REVIEWS[1].articleNbr]).toEqual(KNOWN_REVIEWS[1].review);
   });
 
   it('returns correct review for multiple products', async () => {
@@ -77,11 +84,13 @@ describe('getting product review', () => {
       .post(BASE_ROUTE)
       .send({ articleNbrs: KNOWN_REVIEWS.map((a) => a.articleNbr) });
 
-    convertResDateString(res.body);
+    const resBody = res.body as Record<number, ProductReview | null>;
+
+    convertResDateString(resBody);
 
     expect(res.statusCode).toEqual(200);
     KNOWN_REVIEWS.forEach((a) => {
-      expect(res.body[a.articleNbr]).toEqual(a.review);
+      expect(resBody[a.articleNbr]).toEqual(a.review);
     });
   });
 });

@@ -1,4 +1,4 @@
-import request from 'supertest';
+import request = require('supertest');
 import app from '../../src/app';
 import db from '../../src/db';
 
@@ -37,9 +37,11 @@ describe('getting product rank', () => {
       .post(BASE_ROUTE)
       .send({ articleNbrs: [666, KNOWN_RANKS[2].articleNbr] });
 
+    const resBody = res.body as Record<number, number>;
+
     expect(res.statusCode).toEqual(200);
-    expect(res.body[666]).toBeNull();
-    expect(res.body[KNOWN_RANKS[2].articleNbr]).toEqual(KNOWN_RANKS[2].rank);
+    expect(resBody[666]).toBeNull();
+    expect(resBody[KNOWN_RANKS[2].articleNbr]).toEqual(KNOWN_RANKS[2].rank);
   });
 
   it('returns correct rank for single product', async () => {
@@ -47,8 +49,10 @@ describe('getting product rank', () => {
       .post(BASE_ROUTE)
       .send({ articleNbrs: [KNOWN_RANKS[1].articleNbr] });
 
+    const resBody = res.body as Record<number, number>;
+
     expect(res.statusCode).toEqual(200);
-    expect(res.body[KNOWN_RANKS[1].articleNbr]).toEqual(KNOWN_RANKS[1].rank);
+    expect(resBody[KNOWN_RANKS[1].articleNbr]).toEqual(KNOWN_RANKS[1].rank);
   });
 
   it('returns correct rank for multiple products', async () => {
@@ -56,9 +60,11 @@ describe('getting product rank', () => {
       .post(BASE_ROUTE)
       .send({ articleNbrs: KNOWN_RANKS.map((a) => a.articleNbr) });
 
+    const resBody = res.body as Record<number, number>;
+
     expect(res.statusCode).toEqual(200);
     KNOWN_RANKS.forEach((a) => {
-      expect(res.body[a.articleNbr]).toEqual(a.rank);
+      expect(resBody[a.articleNbr]).toEqual(a.rank);
     });
   });
 });
