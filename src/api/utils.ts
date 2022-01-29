@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
-import { ProductHistoryEntry } from '../models';
-import { DatabaseProductHistoryEntry } from '../models/db';
+import { DeadProductHistoryEntry, ProductHistoryEntry } from '../models';
+import { DbDeadProductHistoryEntry, DbProductHistoryEntry } from '../models/db';
 
 /**
  * Adds a where statement for an interval to a query
@@ -95,23 +95,12 @@ export const selectCamelCaseProductHistory = (
  * Converts a entry in the database to actual history entry
  * @param dbpr Result from database
  */
-export const reduceDbPosthistoryEntry = (
-  dbpr: DatabaseProductHistoryEntry,
-): ProductHistoryEntry => {
-  let markedAsDead = false;
-  if (dbpr.markedAsDeadTimestamp != null) {
-    // If we have a timestamp for when marked as dead, it IS marked as dead!
-    markedAsDead = true;
-  }
-
+export const reduceDbPostHistoryEntry = (dbpr: DbProductHistoryEntry): ProductHistoryEntry => {
   const { retrievedTimestamp, score, text, reviewerName, createdTimestamp, ...reduced } = dbpr;
 
   const phe: ProductHistoryEntry = {
     ...reduced,
-    markedAsDead,
     retrievedDate: new Date(retrievedTimestamp),
-    markedAsDeadDate:
-      dbpr.markedAsDeadTimestamp != null ? new Date(dbpr.markedAsDeadTimestamp) : undefined,
   };
 
   // If review exists, add it
@@ -127,4 +116,16 @@ export const reduceDbPosthistoryEntry = (
   }
 
   return phe;
+};
+
+export const reduceDbDeadPostHistoryEntry = (
+  md: DbDeadProductHistoryEntry,
+): DeadProductHistoryEntry => {
+  const { markedDeadTimestamp, markedRevivedTimestamp, articleNbr, ...reduced } = md;
+
+  return {
+    ...reduced,
+    markedDeadDate: new Date(markedDeadTimestamp),
+    markedRevivedDate: markedRevivedTimestamp == null ? null : new Date(markedDeadTimestamp),
+  };
 };
