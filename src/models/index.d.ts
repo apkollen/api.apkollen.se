@@ -18,8 +18,6 @@ export type ProductHistoryEntry = {
   apk: number;
   articleNbr: number;
   retrievedDate: Date;
-  markedAsDead: boolean;
-  markedAsDeadDate?: Date;
 
   // Current ranking of all BorderShop products. Only
   // valid if this is the latest history entry.
@@ -33,3 +31,8 @@ export type ProductReview = {
   reviewerName: string;
   createdDate: Date;
 };
+
+export type DeadProductHistoryEntry = {
+  markedDeadDate: Date;
+  markedRevivedDate: Date | null;
+}

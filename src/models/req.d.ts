@@ -38,7 +38,6 @@ type BaseSearchProductRequest = BaseProductRequest & {
 };
 
 export type FullSearchProductRequest = BaseSearchProductRequest & {
-  includeMarkedAsDead?: boolean;
   retrievedDate?: {
     start?: Date;
     end?: Date;

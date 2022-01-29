@@ -1,18 +1,22 @@
 import db from '../db';
 import { ProductHistoryEntry, ProductReview } from '../models';
-import { DatabaseProductHistoryEntry, DatabaseProductReview } from '../models/db';
+import { DbDeadProductHistoryEntry, DbProductHistoryEntry, DbProductReview } from '../models/db';
 import { FullSearchProductRequest, TopListSearchProductRequest } from '../models/req';
 import {
   addIntervalWhereToQuery,
   addMultipleWhereLikeToQuery,
   selectCamelCaseProductHistory,
-  reduceDbPosthistoryEntry,
+  reduceDbPostHistoryEntry,
+  reduceDbDeadPostHistoryEntry,
 } from './utils';
-
-const PRODUCT_HISTORY_TABLE = 'bs_product_history_entry';
-const DEAD_LINK_TABLE = 'dead_bs_product';
-const REVIEW_TABLE = 'bs_product_review';
-const TOP_LIST_VIEW = 'current_bs_top_list';
+import {
+  PRODUCT_HISTORY_TABLE,
+  DEAD_LINK_TABLE,
+  REVIEW_TABLE,
+  TOP_LIST_VIEW,
+  CURRENT_DEAD_LINK_VIEW,
+} from './constants';
+import { ProductHistoryResponse, ProductSearchResponse } from '../models/res';
 
 /**
  * Searches the database for only the latest entries of
@@ -23,8 +27,8 @@ const TOP_LIST_VIEW = 'current_bs_top_list';
  */
 export const searchTopList = async (
   pr: TopListSearchProductRequest,
-): Promise<ProductHistoryEntry[]> => {
-  const query = db<DatabaseProductHistoryEntry>(TOP_LIST_VIEW);
+): Promise<ProductSearchResponse> => {
+  const query = db<DbProductHistoryEntry>(TOP_LIST_VIEW);
 
   // Now we make selection
   selectCamelCaseProductHistory(query, TOP_LIST_VIEW, true, true);
@@ -82,9 +86,9 @@ export const searchTopList = async (
     query.offset(pr.offset);
   }
 
-  const resRows = (await query) as DatabaseProductHistoryEntry[];
+  const resRows = (await query) as DbProductHistoryEntry[];
   const res = resRows.map(
-    (dbpr: DatabaseProductHistoryEntry): ProductHistoryEntry => reduceDbPosthistoryEntry(dbpr),
+    (dbpr: DbProductHistoryEntry): ProductHistoryEntry => reduceDbPostHistoryEntry(dbpr),
   );
 
   return res;
@@ -98,8 +102,8 @@ export const searchTopList = async (
  */
 export const searchAllHistoryEntries = async (
   pr: FullSearchProductRequest,
-): Promise<ProductHistoryEntry[]> => {
-  const query = db.queryBuilder<DatabaseProductHistoryEntry>();
+): Promise<ProductSearchResponse> => {
+  const query = db.queryBuilder<DbProductHistoryEntry>();
 
   const cteName = 'valid_date_interval_bs_product_history_entry';
 
@@ -127,12 +131,6 @@ export const searchAllHistoryEntries = async (
 
   // Now we make selection
   selectCamelCaseProductHistory(query, cteName, false, true);
-
-  if (pr.includeMarkedAsDead) {
-    // Join will only be made if this is true
-    query.select('dead_bs_product.marked_dead_timestamp AS markedAsDeadTimestamp');
-  }
-
   addMultipleWhereLikeToQuery(query, 'product_name', pr.productName);
 
   if (pr.category != null) {
@@ -164,22 +162,6 @@ export const searchAllHistoryEntries = async (
     query.whereIn(`${cteName}.bs_product_article_nbr`, pr.articleNbr);
   }
 
-  if (!pr.includeMarkedAsDead) {
-    // Only select those not in the DEAD_LINK_TABLE
-    query.whereNotIn(
-      `${cteName}.bs_product_article_nbr`,
-      db(DEAD_LINK_TABLE).select('bs_product_article_nbr'),
-    );
-  } else {
-    // Add marked as dead dates, also indicates if something has been marked as dead
-    // outer here means if not found in dead links, mark as NULL
-    query.leftOuterJoin(
-      DEAD_LINK_TABLE,
-      `${cteName}.bs_product_article_nbr`,
-      'dead_bs_product.bs_product_article_nbr',
-    );
-  }
-
   // Add reviews, outer means "If not there, insert null"
   query.leftOuterJoin(
     REVIEW_TABLE,
@@ -204,9 +186,9 @@ export const searchAllHistoryEntries = async (
     query.offset(pr.offset);
   }
 
-  const resRows = (await query) as DatabaseProductHistoryEntry[];
+  const resRows = (await query) as DbProductHistoryEntry[];
   const res = resRows.map(
-    (dbpr: DatabaseProductHistoryEntry): ProductHistoryEntry => reduceDbPosthistoryEntry(dbpr),
+    (dbpr: DbProductHistoryEntry): ProductHistoryEntry => reduceDbPostHistoryEntry(dbpr),
   );
 
   return res;
@@ -218,19 +200,37 @@ export const searchAllHistoryEntries = async (
  */
 export const getProductHistory = async (
   articleNbrs: number[],
-): Promise<Record<number, ProductHistoryEntry[]>> => {
-  const query = db<DatabaseProductHistoryEntry>(PRODUCT_HISTORY_TABLE);
-  selectCamelCaseProductHistory(query, PRODUCT_HISTORY_TABLE, false, false);
-  query.whereIn('articleNbr', articleNbrs).orderBy('retrievedTimestamp');
+): Promise<Record<number, ProductHistoryResponse>> => {
+  const historyQuery = db<DbProductHistoryEntry>(PRODUCT_HISTORY_TABLE);
+  selectCamelCaseProductHistory(historyQuery, PRODUCT_HISTORY_TABLE, false, false);
+  historyQuery.whereIn('articleNbr', articleNbrs).orderBy('retrievedTimestamp');
 
-  const rows = await query;
+  const deadHistoryQuery = db<DbDeadProductHistoryEntry>(DEAD_LINK_TABLE)
+    .select('bs_product_article_nbr AS articleNbr')
+    .select('marked_dead_timestamp AS markedDeadTimestamp')
+    .select('marked_revived_timestamp AS markedRevivedTimestamp')
+    .whereIn('articleNbr', articleNbrs)
+    .orderBy('markedDeadTimestamp');
 
-  let res: Record<number, ProductHistoryEntry[]> = {};
+  const [historyRows, deadHistoryRows] = await Promise.all([historyQuery, deadHistoryQuery]);
+
+  let res: Record<number, ProductHistoryResponse> = {};
 
   // Ensure all have empty lists to begin with
-  articleNbrs.forEach((i) => (res[i] = []));
-  rows.forEach((v: DatabaseProductHistoryEntry) => {
-    res[v.articleNbr].push(reduceDbPosthistoryEntry(v));
+  articleNbrs.forEach(
+    (i) =>
+      (res[i] = {
+        history: [],
+        markedDeadHistory: [],
+      }),
+  );
+
+  historyRows.forEach((v: DbProductHistoryEntry) => {
+    res[v.articleNbr].history.push(reduceDbPostHistoryEntry(v));
+  });
+
+  deadHistoryRows.forEach((v: DbDeadProductHistoryEntry) => {
+    res[v.articleNbr].markedDeadHistory.push(reduceDbDeadPostHistoryEntry(v));
   });
 
   return res;
@@ -244,7 +244,7 @@ export const getProductHistory = async (
 export const getProductReview = async (
   articleNbrs: number[],
 ): Promise<Record<number, ProductReview | null>> => {
-  const rows: DatabaseProductReview[] = await db<DatabaseProductReview>(REVIEW_TABLE)
+  const rows: DbProductReview[] = await db<DbProductReview>(REVIEW_TABLE)
     .select('review_score AS score')
     .select('review_text AS text')
     .select('reviewer_name AS reviewerName')
@@ -254,7 +254,7 @@ export const getProductReview = async (
 
   let res: Record<number, ProductReview | null> = {};
   articleNbrs.forEach((i) => (res[i] = null));
-  rows.forEach((v: DatabaseProductReview) => {
+  rows.forEach((v: DbProductReview) => {
     const { createdTimestamp, articleNbr, ...reduced } = v;
 
     const pr: ProductReview = {
@@ -276,7 +276,7 @@ export const getProductReview = async (
 export const getCurrentProductRank = async (
   articleNbrs: number[],
 ): Promise<Record<number, number | null>> => {
-  const rows = await db<DatabaseProductHistoryEntry>(TOP_LIST_VIEW)
+  const rows = await db<DbProductHistoryEntry>(TOP_LIST_VIEW)
     .select(`${TOP_LIST_VIEW}.bs_product_article_nbr AS articleNbr`)
     .select('rank AS currentRank')
     .whereIn(`${TOP_LIST_VIEW}.bs_product_article_nbr`, articleNbrs);
@@ -294,7 +294,7 @@ export const getCurrentProductRank = async (
  * Returns current count of products not marked as dead
  */
 export const getCurrentProductCount = async (): Promise<number | undefined> => {
-  const row = await db<DatabaseProductHistoryEntry>(TOP_LIST_VIEW)
+  const row = await db<DbProductHistoryEntry>(TOP_LIST_VIEW)
     .count<Record<string, number>>()
     .first();
 
@@ -302,7 +302,7 @@ export const getCurrentProductCount = async (): Promise<number | undefined> => {
 };
 
 export const getAllCategories = async (): Promise<string[]> => {
-  const rows = await db<DatabaseProductHistoryEntry>(PRODUCT_HISTORY_TABLE).distinct('category');
+  const rows = await db<DbProductHistoryEntry>(PRODUCT_HISTORY_TABLE).distinct('category');
   return rows.map((r) => r.category);
 };
 
@@ -314,7 +314,7 @@ export const getAllCategories = async (): Promise<string[]> => {
 export const getSubcatFromCats = async (
   categories: string[],
 ): Promise<Record<string, string[]>> => {
-  const rows = await db<DatabaseProductHistoryEntry>(PRODUCT_HISTORY_TABLE)
+  const rows = await db<DbProductHistoryEntry>(PRODUCT_HISTORY_TABLE)
     .select('category', 'subcategory') // Any subcategory will only ever have one parent category
     .distinct()
     .whereIn('category', categories);
