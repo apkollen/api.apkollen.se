@@ -1,3 +1,4 @@
+/* eslint-disable */
 exports.up = async function(knex) {
   // This is basically just a copy/paste of `init.sql` in the `bsscraper` repo
   await knex.raw(`

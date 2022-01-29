@@ -1,0 +1,7 @@
+{
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "test/**/*.js"
+  ]
+}

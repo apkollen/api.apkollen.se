@@ -1,3 +1,4 @@
+/* eslint-disable */
 exports.seed = async function (knex) {
   // This is basically just a copy/paste of `init.sql` in the `bsscraper` repo
 
