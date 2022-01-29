@@ -13,8 +13,7 @@ import {
   PRODUCT_HISTORY_TABLE,
   DEAD_LINK_TABLE,
   REVIEW_TABLE,
-  TOP_LIST_VIEW,
-  CURRENT_DEAD_LINK_VIEW,
+  TOP_LIST_VIEW
 } from './constants';
 import { ProductHistoryResponse, ProductSearchResponse } from '../models/res';
 
@@ -214,7 +213,7 @@ export const getProductHistory = async (
 
   const [historyRows, deadHistoryRows] = await Promise.all([historyQuery, deadHistoryQuery]);
 
-  let res: Record<number, ProductHistoryResponse> = {};
+  const res: Record<number, ProductHistoryResponse> = {};
 
   // Ensure all have empty lists to begin with
   articleNbrs.forEach(
@@ -244,7 +243,7 @@ export const getProductHistory = async (
 export const getProductReview = async (
   articleNbrs: number[],
 ): Promise<Record<number, ProductReview | null>> => {
-  const rows: DbProductReview[] = await db<DbProductReview>(REVIEW_TABLE)
+  const rows: DbProductReview[] | undefined = await db<DbProductReview>(REVIEW_TABLE)
     .select('review_score AS score')
     .select('review_text AS text')
     .select('reviewer_name AS reviewerName')
@@ -252,7 +251,7 @@ export const getProductReview = async (
     .select('bs_product_article_nbr AS articleNbr')
     .whereIn('bs_product_article_nbr', articleNbrs);
 
-  let res: Record<number, ProductReview | null> = {};
+  const res: Record<number, ProductReview | null> = {};
   articleNbrs.forEach((i) => (res[i] = null));
   rows.forEach((v: DbProductReview) => {
     const { createdTimestamp, articleNbr, ...reduced } = v;
@@ -276,15 +275,15 @@ export const getProductReview = async (
 export const getCurrentProductRank = async (
   articleNbrs: number[],
 ): Promise<Record<number, number | null>> => {
-  const rows = await db<DbProductHistoryEntry>(TOP_LIST_VIEW)
+  const rows: DbProductHistoryEntry[] | undefined = await db<DbProductHistoryEntry>(TOP_LIST_VIEW)
     .select(`${TOP_LIST_VIEW}.bs_product_article_nbr AS articleNbr`)
     .select('rank AS currentRank')
     .whereIn(`${TOP_LIST_VIEW}.bs_product_article_nbr`, articleNbrs);
 
-  let res: Record<number, number | null> = {};
+  const res: Record<number, number | null> = {};
   articleNbrs.forEach((i) => (res[i] = null));
   rows.forEach((row) => {
-    res[row.articleNbr] = row.currentRank;
+    res[row.articleNbr] = row.currentRank ?? null;
   });
 
   return res;
@@ -319,7 +318,7 @@ export const getSubcatFromCats = async (
     .distinct()
     .whereIn('category', categories);
 
-  let res: Record<string, string[]> = {};
+  const res: Record<string, string[]> = {};
   categories.forEach((c) => (res[c] = []));
   rows.forEach((row) => {
     res[row.category].push(row.subcategory);

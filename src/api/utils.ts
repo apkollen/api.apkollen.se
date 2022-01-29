@@ -105,14 +105,14 @@ export const reduceDbPostHistoryEntry = (dbpr: DbProductHistoryEntry): ProductHi
 
   // If review exists, add it
   if (score != null && text != null && reviewerName != null && createdTimestamp != null) {
-    phe['review'] = {
+    phe.review = {
       score,
       text,
       reviewerName,
       createdDate: new Date(createdTimestamp),
     };
   } else {
-    phe['review'] = null;
+    phe.review = null;
   }
 
   return phe;
