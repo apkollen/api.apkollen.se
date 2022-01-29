@@ -21,7 +21,7 @@ interface TypedRequestBody<T> extends Request {
   body: T
 }
 
-export const app = express();
+const app = express();
 
 app.use(
   cors({

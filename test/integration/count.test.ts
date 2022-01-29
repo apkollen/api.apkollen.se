@@ -1,4 +1,4 @@
-import request from 'supertest';
+import request = require('supertest');
 import app from '../../src/app';
 import db from '../../src/db';
 
@@ -18,7 +18,9 @@ describe('getting product count', () => {
   it('returns correct number of live products', async () => {
     const res = await r.get(BASE_ROUTE);
 
+    const resBody = res.body as Array<number>;
+
     expect(res.statusCode).toEqual(200);
-    expect(res.body[0]).toEqual(KNOWN_COUNT);
+    expect(resBody[0]).toEqual(KNOWN_COUNT);
   });
 });
