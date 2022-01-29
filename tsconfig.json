@@ -67,9 +67,11 @@
     "exclude": [
       "node_modules",
       "src/modules/*.ignore",
+      "test/db/**/*.js"
     ],
     "include": [
-      "src/**/*.ts"
+      "src/**/*.ts",
+      "test/**/*.ts"
     ]
   }
   
