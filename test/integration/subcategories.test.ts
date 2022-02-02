@@ -41,6 +41,8 @@ describe('getting subcategories', () => {
 
     const resBody = res.body as Record<string, string[]>
 
+    expect(Object.keys(resBody)).toHaveLength(2);
+
     expect(res.statusCode).toEqual(200);
     expect(resBody[FAKE_CATEGORY]).toEqual([]);
     expect(resBody[KNOWN_SUBCATS[1].category]).toEqual(
@@ -55,6 +57,8 @@ describe('getting subcategories', () => {
 
     const resBody = res.body as Record<string, string[]>
 
+    expect(Object.keys(resBody)).toHaveLength(1);
+
     expect(res.statusCode).toEqual(200);
     expect(resBody[KNOWN_SUBCATS[2].category]).toEqual(
       expect.arrayContaining(KNOWN_SUBCATS[2].subcategories),
@@ -67,6 +71,8 @@ describe('getting subcategories', () => {
       .send({ categories: KNOWN_SUBCATS.map((e) => e.category) });
 
     const resBody = res.body as Record<string, string[]>
+
+    expect(Object.keys(resBody)).toHaveLength(Object.keys(KNOWN_SUBCATS).length);
 
     expect(res.statusCode).toEqual(200);
     KNOWN_SUBCATS.forEach((e) => {

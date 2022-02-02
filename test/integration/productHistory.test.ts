@@ -48,6 +48,9 @@ describe('getting product history', () => {
 
     const resBody = res.body as Record<number, ProductHistoryResponse>;
 
+    // Response has correct number of entries
+    expect(Object.keys(resBody)).toHaveLength(Object.keys(KNOWN_HISTORY).length + 1);
+
     expect(resBody[666].history).toHaveLength(0);
     expect(resBody[666].markedDeadHistory).toHaveLength(0);
 
