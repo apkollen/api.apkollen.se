@@ -1,4 +1,5 @@
 import { Schema } from 'express-validator/src/middlewares/schema';
+import { body } from 'express-validator';
 
 /**
  * This file contains schemas to be used to validate search requests
@@ -49,38 +50,50 @@ export const baseSearchProductRequestSchema: Schema = {
     toInt: true, // Convert to int if possible
   },
 
-  sortOrder: {
-    optional: true,
-    isObject: true,
-  },
-  'sortOrder.key': {
-    // CHANGE IF PRODUCT DATA IS EVER CHANGED!
-    errorMessage: 'sortOrder key must be of sortable member of the product properties',
-    isIn: {
-      // Confusing type workaround, just add valid keys to inner array
-      // note that timestamps and possibly undefined SHOULD NOT BE SORTABLE,
-      // as there is no guarantee that these are available to the SQL query
-      options: [
-        [
-          'productName',
-          'category',
-          'subcategory',
-          'unitVolume',
-          'unitPrice',
-          'alcvol',
-          'apk',
-          'articleNbr',
-        ],
-      ],
-    },
-  },
-  'sortOrder.order': {
-    errorMessage: 'sortOrder order must either be "asc" or "desc"',
-    isIn: {
-      options: [['asc', 'desc']],
-    },
-  },
+  // sortOrder is custom chain
 };
+
+interface StrictObject {
+  [key: string]: string
+}
+
+export const sortOrderValidationChain = body('sortOrder')
+  .if(body('sortOrder').exists())
+  .custom((sortOrder) => {
+    const so = sortOrder as StrictObject;
+
+    if (so.key == null) {
+      return false;
+    }
+
+    // CHANGE IF PRODUCT DATA IS EVER CHANGED!
+    const validKeys = [
+      'productName',
+      'category',
+      'subcategory',
+      'unitVolume',
+      'unitPrice',
+      'alcvol',
+      'apk',
+      'articleNbr',
+      'retrievedDate',
+    ];
+
+    return validKeys.includes(so.key);
+  })
+  .withMessage('sortOrder key must be of sortable member of the product properties')
+  .custom((sortOrder) => {
+    const so = sortOrder as StrictObject;
+
+    if (so.order == null) {
+      return false;
+    }
+
+    const validOrder = ['asc', 'desc'];
+
+    return validOrder.includes(so.order);
+  })
+  .withMessage('sortOrder order must either be "asc" or "desc"');
 
 export const fullSearchProductRequestSchema: Schema = {
   ...baseProductRequestSchema,
