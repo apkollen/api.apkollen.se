@@ -15,7 +15,7 @@ import {
   REVIEW_TABLE,
   TOP_LIST_VIEW
 } from './constants';
-import { ProductHistoryResponse, ProductSearchResponse } from '../models/res';
+import { ProductHistoryResponse } from '../models/res';
 
 /**
  * Searches the database for only the latest entries of
@@ -26,7 +26,7 @@ import { ProductHistoryResponse, ProductSearchResponse } from '../models/res';
  */
 export const searchTopList = async (
   pr: TopListSearchProductRequest,
-): Promise<ProductSearchResponse> => {
+): Promise<ProductHistoryEntry[]> => {
   const query = db<DbProductHistoryEntry>(TOP_LIST_VIEW);
 
   // Now we make selection
@@ -101,7 +101,7 @@ export const searchTopList = async (
  */
 export const searchAllHistoryEntries = async (
   pr: FullSearchProductRequest,
-): Promise<ProductSearchResponse> => {
+): Promise<ProductHistoryEntry[]> => {
   const query = db.queryBuilder<DbProductHistoryEntry>();
 
   const cteName = 'valid_date_interval_bs_product_history_entry';
