@@ -2,6 +2,8 @@ import db from '../db';
 import { ProductHistoryEntry, ProductReview } from '../models';
 import { DbDeadProductHistoryEntry, DbProductHistoryEntry, DbProductReview } from '../models/db';
 import { FullSearchProductRequest, TopListSearchProductRequest } from '../models/req';
+import { ProductHistoryResponse } from '../models/res';
+import { PRODUCT_HISTORY_TABLE, DEAD_LINK_TABLE, REVIEW_TABLE, TOP_LIST_VIEW } from './constants';
 import {
   addIntervalWhereToQuery,
   addMultipleWhereLikeToQuery,
@@ -9,13 +11,6 @@ import {
   reduceDbPostHistoryEntry,
   reduceDbDeadPostHistoryEntry,
 } from './utils';
-import {
-  PRODUCT_HISTORY_TABLE,
-  DEAD_LINK_TABLE,
-  REVIEW_TABLE,
-  TOP_LIST_VIEW
-} from './constants';
-import { ProductHistoryResponse } from '../models/res';
 
 /**
  * Searches the database for only the latest entries of
@@ -75,6 +70,8 @@ export const searchTopList = async (
     // Handle that we have timestamp in db but date in API
     const key = pr.sortOrder.key === 'retrievedDate' ? 'retrievedTimestamp' : pr.sortOrder.key;
     query.orderBy(key as string, pr.sortOrder.order);
+  } else {
+    query.orderBy('apk', 'desc');
   }
 
   if (pr.maxItems != null) {
@@ -85,7 +82,7 @@ export const searchTopList = async (
     query.offset(pr.offset);
   }
 
-  const resRows = (await query) as DbProductHistoryEntry[];
+  const resRows = (await query.debug(true)) as DbProductHistoryEntry[];
   const res = resRows.map(
     (dbpr: DbProductHistoryEntry): ProductHistoryEntry => reduceDbPostHistoryEntry(dbpr),
   );
@@ -175,6 +172,8 @@ export const searchAllHistoryEntries = async (
     // Handle that we have timestamp in db but date in API
     const key = pr.sortOrder.key === 'retrievedDate' ? 'retrievedTimestamp' : pr.sortOrder.key;
     query.orderBy(key as string, pr.sortOrder.order);
+  } else {
+    query.orderBy('apk', 'desc');
   }
 
   if (pr.maxItems != null) {
