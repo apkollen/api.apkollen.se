@@ -61,6 +61,8 @@ describe('getting product review', () => {
 
     const resBody = res.body as Record<number, ProductReview | null>;
 
+    expect(Object.keys(resBody)).toHaveLength(2);
+
     convertResDateString(resBody);
 
     expect(res.statusCode).toEqual(200);
@@ -72,6 +74,8 @@ describe('getting product review', () => {
     const res = await r.post(BASE_ROUTE).send({ articleNbrs: [KNOWN_REVIEWS[1].articleNbr] });
 
     const resBody = res.body as Record<number, ProductReview | null>;
+
+    expect(Object.keys(resBody)).toHaveLength(1);
 
     convertResDateString(resBody);
 
@@ -85,6 +89,8 @@ describe('getting product review', () => {
       .send({ articleNbrs: KNOWN_REVIEWS.map((a) => a.articleNbr) });
 
     const resBody = res.body as Record<number, ProductReview | null>;
+
+    expect(Object.keys(resBody)).toHaveLength(Object.keys(KNOWN_REVIEWS).length);
 
     convertResDateString(resBody);
 
