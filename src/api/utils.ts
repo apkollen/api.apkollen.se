@@ -19,11 +19,11 @@ export const addIntervalWhereToQuery = <T>(
 ) => {
   if (obj != null) {
     if (obj[startKey] != null) {
-      query.where(columnName, '<=', startKey as number);
+      query.where(columnName, '>=', startKey as number);
     }
 
     if (obj[endKey] != null) {
-      query.where(columnName, '>=', endKey as number);
+      query.where(columnName, '<=', endKey as number);
     }
   }
 };
