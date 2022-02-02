@@ -51,13 +51,20 @@ describe('getting product history', () => {
     expect(resBody[666].history).toHaveLength(0);
     expect(resBody[666].markedDeadHistory).toHaveLength(0);
 
-    KNOWN_HISTORY.forEach((h) => {
-      const a = h.articleNbr;
+    KNOWN_HISTORY.forEach((kh) => {
+      const a = kh.articleNbr;
       const history: ProductHistoryEntry[] = resBody[a].history;
       const markedDeadHistory: DeadProductHistoryEntry[] = resBody[a].markedDeadHistory;
 
-      expect(history).toHaveLength(h.historyLength);
-      expect(markedDeadHistory).toHaveLength(h.markedDeadHistoryLength);
+      expect(history).toHaveLength(kh.historyLength);
+      expect(markedDeadHistory).toHaveLength(kh.markedDeadHistoryLength);
+
+      // Name and articleNbr same for all history entries for
+      // this product
+      history.forEach((h) => {
+        expect(kh.name).toEqual(h.productName);
+        expect(kh.articleNbr).toEqual(h.articleNbr);
+      })
     });
   });
 });
