@@ -1,12 +1,4 @@
-import { ProductHistoryEntry, DeadProductHistoryEntry } from './index'
-
-/**
- * Represents the search response, but does not include
- * information about if products was marked dead. This
- * can either be done with a request specifying all responses
- * to be alive, or by using a `ProductHistoryResponse`
- */
-export type ProductSearchResponse = ProductHistoryEntry[];
+import { ProductHistoryEntry, DeadProductHistoryEntry } from './index';
 
 /**
  * Represents the history response for a single product.
@@ -14,6 +6,12 @@ export type ProductSearchResponse = ProductHistoryEntry[];
  * was marked as dead.
  */
 export type ProductHistoryResponse = {
-  history: ProductSearchResponse,
-  markedDeadHistory: DeadProductHistoryEntry[],
+  /**
+   * Represents the search response, but does not include
+   * information about if products was marked dead. This
+   * can either be done with a request specifying all responses
+   * to be alive, or by using a `ProductHistoryResponse`
+   */
+  history: ProductHistoryEntry[];
+  markedDeadHistory: DeadProductHistoryEntry[];
 };
