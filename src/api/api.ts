@@ -16,11 +16,13 @@ import {
  * Searches the database for only the latest entries of
  * products not marked as dead
  * @param pr A query for products in the APKollen top list
+ * @param debug If `Knex` should output debug information, including complete query
  * @returns A list of the latest, live, product history entries, including
  * their current rank
  */
 export const searchTopList = async (
   pr: TopListSearchProductRequest,
+  debug = false,
 ): Promise<ProductHistoryEntry[]> => {
   const query = db<DbProductHistoryEntry>(TOP_LIST_VIEW);
 
@@ -82,7 +84,7 @@ export const searchTopList = async (
     query.offset(pr.offset);
   }
 
-  const resRows = (await query.debug(true)) as DbProductHistoryEntry[];
+  const resRows = (await query.debug(debug)) as DbProductHistoryEntry[];
   const res = resRows.map(
     (dbpr: DbProductHistoryEntry): ProductHistoryEntry => reduceDbPostHistoryEntry(dbpr),
   );
@@ -93,11 +95,13 @@ export const searchTopList = async (
 /**
  * Searches through the whole history of product entries
  * @param pr A full search request of the APKollen database
+ * @param debug If `Knex` should output debug information, including complete query
  * @returns A list of all product history entries matching the search. **Does _not_
  * include current rank of any product.**
  */
 export const searchAllHistoryEntries = async (
   pr: FullSearchProductRequest,
+  debug = false
 ): Promise<ProductHistoryEntry[]> => {
   const query = db.queryBuilder<DbProductHistoryEntry>();
 
@@ -184,7 +188,7 @@ export const searchAllHistoryEntries = async (
     query.offset(pr.offset);
   }
 
-  const resRows = (await query) as DbProductHistoryEntry[];
+  const resRows = (await query.debug(debug)) as DbProductHistoryEntry[];
   const res = resRows.map(
     (dbpr: DbProductHistoryEntry): ProductHistoryEntry => reduceDbPostHistoryEntry(dbpr),
   );
