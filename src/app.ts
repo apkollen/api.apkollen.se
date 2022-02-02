@@ -12,7 +12,7 @@ import {
   getAllCategories,
   getSubcatFromCats,
 } from './api/api';
-import { baseSearchProductRequestSchema, fullSearchProductRequestSchema } from './validation';
+import { baseSearchProductRequestSchema, fullSearchProductRequestSchema, sortOrderValidationChain } from './validation';
 import { body, checkSchema, validationResult } from 'express-validator';
 
 if (process.env.NODE_ENV !== 'test') console.log('Starting startup...');
@@ -34,7 +34,13 @@ app.use(express.json());
 app.post(
   '/bs/products/search/current',
   checkSchema(baseSearchProductRequestSchema),
+  sortOrderValidationChain,
   async (req: TypedRequestBody<TopListSearchProductRequest>, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const pr: TopListSearchProductRequest = req.body;
 
     try {
@@ -52,7 +58,13 @@ app.post(
 app.post(
   '/bs/products/search/all',
   checkSchema(fullSearchProductRequestSchema),
+  sortOrderValidationChain,
   async (req: TypedRequestBody<FullSearchProductRequest>, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const pr: FullSearchProductRequest = req.body;
 
     try {
