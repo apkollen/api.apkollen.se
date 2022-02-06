@@ -1,6 +1,11 @@
 import db from '../db';
 import { ProductHistoryEntry, ProductReview } from '../models';
-import { DbDeadProductHistoryEntry, DbProductHistoryEntry, DbProductReview } from '../models/db';
+import {
+  DbDeadProductHistoryEntry,
+  DbProductCurrentRank,
+  DbProductHistoryEntry,
+  DbProductReview,
+} from '../models/db';
 import { FullSearchProductRequest, TopListSearchProductRequest } from '../models/req';
 import { ProductHistoryResponse } from '../models/res';
 import { PRODUCT_HISTORY_TABLE, DEAD_LINK_TABLE, REVIEW_TABLE, TOP_LIST_VIEW } from './constants';
@@ -101,7 +106,7 @@ export const searchTopList = async (
  */
 export const searchAllHistoryEntries = async (
   pr: FullSearchProductRequest,
-  debug = false
+  debug = false,
 ): Promise<ProductHistoryEntry[]> => {
   const query = db.queryBuilder<DbProductHistoryEntry>();
 
@@ -197,7 +202,8 @@ export const searchAllHistoryEntries = async (
 };
 
 /**
- * Get complete history of products with specified article numbers
+ * Get complete history of products with specified article numbers,
+ * or `undefined` if no history on the product is held
  * @param articleNbrs List of article numbers to get history from
  */
 export const getProductHistory = async (
@@ -208,44 +214,53 @@ export const getProductHistory = async (
   historyQuery.whereIn('articleNbr', articleNbrs).orderBy('retrievedTimestamp');
 
   const deadHistoryQuery = db<DbDeadProductHistoryEntry>(DEAD_LINK_TABLE)
-    .select('bs_product_article_nbr AS articleNbr')
-    .select('marked_dead_timestamp AS markedDeadTimestamp')
-    .select('marked_revived_timestamp AS markedRevivedTimestamp')
+    .select(db.ref('bs_product_article_nbr').as('articleNbr'))
+    .select(db.ref('marked_dead_timestamp').as('markedDeadTimestamp'))
+    .select(db.ref('marked_revived_timestamp').as('markedRevivedTimestamp'))
     .whereIn('articleNbr', articleNbrs)
     .orderBy('markedDeadTimestamp');
 
   const [historyRows, deadHistoryRows] = await Promise.all([historyQuery, deadHistoryQuery]);
 
-  const res: Record<number, ProductHistoryResponse> = {};
+  let res: Record<number, ProductHistoryResponse> = {};
 
-  // Ensure all have empty lists to begin with
-  articleNbrs.forEach(
-    (i) =>
-      (res[i] = {
+  res = historyRows.reduce<Record<number, ProductHistoryResponse>>((acc, row) => {
+    if (!acc[row.articleNbr]) {
+      acc[row.articleNbr] = {
         history: [],
         markedDeadHistory: [],
-      }),
-  );
+      };
+    }
 
-  historyRows.forEach((v: DbProductHistoryEntry) => {
-    res[v.articleNbr].history.push(reduceDbPostHistoryEntry(v));
-  });
+    acc[row.articleNbr].history.push(reduceDbPostHistoryEntry(row));
 
-  deadHistoryRows.forEach((v: DbDeadProductHistoryEntry) => {
-    res[v.articleNbr].markedDeadHistory.push(reduceDbDeadPostHistoryEntry(v));
-  });
+    return acc;
+  }, res);
+
+  res = deadHistoryRows.reduce((acc, row: DbDeadProductHistoryEntry) => {
+    if (!acc[row.articleNbr]) {
+      acc[row.articleNbr] = {
+        history: [],
+        markedDeadHistory: [],
+      };
+    }
+
+    acc[row.articleNbr].markedDeadHistory.push(reduceDbDeadPostHistoryEntry(row));
+
+    return acc;
+  }, res);
 
   return res;
 };
 
 /**
  * Retrieves product reviews for specified article numbers, and returns a record
- * mapping each article number to their review (or null, if none is found)
+ * mapping each article number to their review if it exists
  * @param articleNbrs
  */
 export const getProductReview = async (
   articleNbrs: number[],
-): Promise<Record<number, ProductReview | null>> => {
+): Promise<Record<number, ProductReview>> => {
   const rows: DbProductReview[] | undefined = await db<DbProductReview>(REVIEW_TABLE)
     .select('review_score AS score')
     .select('review_text AS text')
@@ -254,17 +269,17 @@ export const getProductReview = async (
     .select('bs_product_article_nbr AS articleNbr')
     .whereIn('bs_product_article_nbr', articleNbrs);
 
-  const res: Record<number, ProductReview | null> = {};
-  articleNbrs.forEach((i) => (res[i] = null));
-  rows.forEach((v: DbProductReview) => {
-    const { createdTimestamp, articleNbr, ...reduced } = v;
+  const res: Record<number, ProductReview> = {};
+
+  rows.forEach((row) => {
+    const { createdTimestamp, articleNbr, ...reduced } = row;
 
     const pr: ProductReview = {
       ...reduced,
       createdDate: new Date(createdTimestamp),
     };
 
-    res[v.articleNbr] = pr;
+    res[row.articleNbr] = pr;
   });
 
   return res;
@@ -277,23 +292,22 @@ export const getProductReview = async (
  */
 export const getCurrentProductRank = async (
   articleNbrs: number[],
-): Promise<Record<number, number | null>> => {
-  const rows: DbProductHistoryEntry[] | undefined = await db<DbProductHistoryEntry>(TOP_LIST_VIEW)
-    .select(`${TOP_LIST_VIEW}.bs_product_article_nbr AS articleNbr`)
-    .select('rank AS currentRank')
-    .whereIn(`${TOP_LIST_VIEW}.bs_product_article_nbr`, articleNbrs);
+): Promise<Record<number, number>> => {
+  const rows: DbProductCurrentRank[] = await db<DbProductCurrentRank>(TOP_LIST_VIEW)
+    .select(db.ref('bs_product_article_nbr').as('articleNbr'))
+    .select(db.ref('rank').as('currentRank'))
+    .whereIn('bs_product_article_nbr', articleNbrs);
 
-  const res: Record<number, number | null> = {};
-  articleNbrs.forEach((i) => (res[i] = null));
+  const res: Record<number, number> = {};
   rows.forEach((row) => {
-    res[row.articleNbr] = row.currentRank ?? null;
+    res[row.articleNbr] = row.currentRank;
   });
 
   return res;
 };
 
 /**
- * Returns current count of products not marked as dead
+ * Returns current count of products not marked as dead.
  */
 export const getCurrentProductCount = async (): Promise<number | undefined> => {
   const row = await db<DbProductHistoryEntry>(TOP_LIST_VIEW)
@@ -310,7 +324,8 @@ export const getAllCategories = async (): Promise<string[]> => {
 
 /**
  * Returns _all_ subcategories to the categories provided, as a Record
- * matching each category with their subcategories
+ * matching each category with their subcategories, if the category
+ * has any subcategories.
  * @param categories List of category names
  */
 export const getSubcatFromCats = async (
@@ -322,10 +337,13 @@ export const getSubcatFromCats = async (
     .whereIn('category', categories);
 
   const res: Record<string, string[]> = {};
-  categories.forEach((c) => (res[c] = []));
-  rows.forEach((row) => {
-    res[row.category].push(row.subcategory);
-  });
+  return rows.reduce((acc, row) => {
+    if (!acc[row.category]) {
+      acc[row.category] = [];
+    }
 
-  return res;
+    acc[row.category].push(row.subcategory);
+
+    return acc;
+  }, res);
 };
