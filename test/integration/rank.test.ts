@@ -32,7 +32,7 @@ describe('getting product rank', () => {
     await r.post(BASE_ROUTE).send({}).expect(400);
   });
 
-  it('returns null for unknown articleNbrs, but known articleNbr still returns OK rank', async () => {
+  it('returns undefined for unknown articleNbrs, but known articleNbr still returns OK rank', async () => {
     const res = await r
       .post(BASE_ROUTE)
       .send({ articleNbrs: [666, KNOWN_RANKS[2].articleNbr] });
@@ -40,7 +40,7 @@ describe('getting product rank', () => {
     const resBody = res.body as Record<number, number>;
 
     expect(res.statusCode).toEqual(200);
-    expect(resBody[666]).toBeNull();
+    expect(resBody[666]).toBeUndefined();
     expect(resBody[KNOWN_RANKS[2].articleNbr]).toEqual(KNOWN_RANKS[2].rank);
   });
 
