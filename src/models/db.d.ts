@@ -21,11 +21,13 @@ export type DbProductReview = Omit<ProductReview, 'createdDate'> & {
   createdTimestamp: number;
 };
 
-export type DbDeadProductHistoryEntry = Omit<
-  DeadProductHistoryEntry,
-  'markedDeadDate' | 'markedRevivedDate'
-> & {
+export type DbDeadProductHistoryEntry = {
   articleNbr: number;
   markedDeadTimestamp: number;
   markedRevivedTimestamp: number | null;
 };
+
+export type DbProductCurrentRank = {
+  articleNbr: number;
+  currentRank: number;
+}

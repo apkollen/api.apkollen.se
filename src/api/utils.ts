@@ -1,4 +1,5 @@
 import { Knex } from 'knex';
+
 import { DeadProductHistoryEntry, ProductHistoryEntry } from '../models';
 import { DbDeadProductHistoryEntry, DbProductHistoryEntry } from '../models/db';
 
