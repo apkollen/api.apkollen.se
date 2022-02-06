@@ -1,8 +1,8 @@
-import request = require('supertest');
-
 import app from '../../src/app';
 import db from '../../src/db';
 import { ProductReview } from '../../src/models';
+
+import request = require('supertest');
 
 const BASE_ROUTE = '/bs/products/review';
 
@@ -40,7 +40,7 @@ describe('getting product review', () => {
    * in response body to actual `Date`
    * @param resBody
    */
-  const convertResDateString = (resBody: Record<number, ProductReview | null>) => {
+  const convertResDateString = (resBody: Record<number, ProductReview>) => {
     if (resBody == null) return;
     (Object.keys(resBody) as unknown as Array<number>).forEach((k) => {
       const rec = resBody[k];
@@ -56,24 +56,24 @@ describe('getting product review', () => {
     await r.post(BASE_ROUTE).send({}).expect(400);
   });
 
-  it('returns null for unknown articleNbrs, but known articleNbr still returns OK review', async () => {
+  it('returns undefined for unknown articleNbrs, but known articleNbr still returns OK review', async () => {
     const res = await r.post(BASE_ROUTE).send({ articleNbrs: [666, KNOWN_REVIEWS[1].articleNbr] });
 
-    const resBody = res.body as Record<number, ProductReview | null>;
+    const resBody = res.body as Record<number, ProductReview>;
 
-    expect(Object.keys(resBody)).toHaveLength(2);
+    expect(Object.keys(resBody)).toHaveLength(1);
 
     convertResDateString(resBody);
 
     expect(res.statusCode).toEqual(200);
-    expect(resBody[666]).toBeNull();
+    expect(resBody[666]).toBeUndefined();
     expect(resBody[KNOWN_REVIEWS[1].articleNbr]).toEqual(KNOWN_REVIEWS[1].review);
   });
 
   it('returns correct review for single product', async () => {
     const res = await r.post(BASE_ROUTE).send({ articleNbrs: [KNOWN_REVIEWS[1].articleNbr] });
 
-    const resBody = res.body as Record<number, ProductReview | null>;
+    const resBody = res.body as Record<number, ProductReview>;
 
     expect(Object.keys(resBody)).toHaveLength(1);
 
@@ -88,15 +88,13 @@ describe('getting product review', () => {
       .post(BASE_ROUTE)
       .send({ articleNbrs: KNOWN_REVIEWS.map((a) => a.articleNbr) });
 
-    const resBody = res.body as Record<number, ProductReview | null>;
+    const resBody = res.body as Record<number, ProductReview>;
 
-    expect(Object.keys(resBody)).toHaveLength(Object.keys(KNOWN_REVIEWS).length);
+    expect(Object.keys(resBody)).toHaveLength(1); // Only one review exists in DB
 
     convertResDateString(resBody);
 
     expect(res.statusCode).toEqual(200);
-    KNOWN_REVIEWS.forEach((a) => {
-      expect(resBody[a.articleNbr]).toEqual(a.review);
-    });
+    expect(resBody[KNOWN_REVIEWS[1].articleNbr]).toEqual(KNOWN_REVIEWS[1].review);
   });
 });

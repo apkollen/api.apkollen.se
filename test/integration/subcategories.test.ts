@@ -34,17 +34,17 @@ describe('getting subcategories', () => {
     await r.post(BASE_ROUTE).send({}).expect(400);
   });
 
-  it('returns empty list for unknown categories, but known categories still returns OK rank', async () => {
+  it('returns undefined for unknown categories, but known categories still returns OK rank', async () => {
     const res = await r
       .post(BASE_ROUTE)
       .send({ categories: [FAKE_CATEGORY, KNOWN_SUBCATS[1].category] });
 
     const resBody = res.body as Record<string, string[]>
 
-    expect(Object.keys(resBody)).toHaveLength(2);
+    expect(Object.keys(resBody)).toHaveLength(1);
 
     expect(res.statusCode).toEqual(200);
-    expect(resBody[FAKE_CATEGORY]).toEqual([]);
+    expect(resBody[FAKE_CATEGORY]).toBeUndefined();
     expect(resBody[KNOWN_SUBCATS[1].category]).toEqual(
       expect.arrayContaining(KNOWN_SUBCATS[1].subcategories),
     );
