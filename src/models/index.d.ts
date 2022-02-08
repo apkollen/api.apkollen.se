@@ -1,28 +1,31 @@
 /**
- * Type defining a history entry of a bordershop product. May contain additional
- * data not found by `bsscraper`.
- * `currentRank` is only provided in the context where it is certain that this
- * is the latest entry and it is live (i.e. not dead)
- *
- * _Changes to this type must be accompanied to changes with the `sortOrder`
+ * _Changes to these types must be accompanied to changes with the `sortOrder`
  * validation in the validation schemas_
  */
-export type ProductHistoryEntry = {
+
+/**
+ * Type representing data for a product at BorderShop.
+ * The data is always current, to stay searchable over time.
+ */
+export type Product = {
+  articleNbr: number;
   url: string;
   productName: string;
   category: string;
   subcategory: string;
+  currentRank?: number;
+  review?: ProductReview;
+};
+
+/**
+ * Type defining a price history entry of a bordershop product.
+ */
+export type ProductHistoryEntry = {
   unitVolume: number;
   unitPrice: number;
   alcvol: number;
   apk: number;
-  articleNbr: number;
   retrievedDate: Date;
-
-  // Current ranking of all BorderShop products. Only
-  // valid if this is the latest history entry.
-  currentRank?: number;
-  review: ProductReview | null;
 };
 
 export type ProductReview = {

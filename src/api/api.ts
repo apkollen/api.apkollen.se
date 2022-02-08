@@ -2,6 +2,7 @@ import db from '../db';
 import { ProductHistoryEntry, ProductReview } from '../models';
 import {
   DbDeadProductHistoryEntry,
+  DbProduct,
   DbProductCurrentRank,
   DbProductHistoryEntry,
   DbProductReview,
@@ -217,11 +218,6 @@ export const getProductHistory = async (
 ): Promise<Record<number, ProductHistoryResponse>> => {
   const historyQuery = db<DbProductHistoryEntry>(PRODUCT_HISTORY_TABLE);
   selectCamelCaseProductHistory(historyQuery, PRODUCT_HISTORY_TABLE, false, false);
-  historyQuery.leftJoin(
-    PRODUCT_TABLE,
-    `${PRODUCT_HISTORY_TABLE}.bs_product_article_nbr`,
-    `${PRODUCT_TABLE}.article_nbr`,
-  );
   historyQuery.whereIn('articleNbr', articleNbrs).orderBy('retrievedTimestamp');
 
   const deadHistoryQuery = db<DbDeadProductHistoryEntry>(DEAD_LINK_TABLE)
@@ -329,7 +325,7 @@ export const getCurrentProductCount = async (): Promise<number | undefined> => {
 };
 
 export const getAllCategories = async (): Promise<string[]> => {
-  const rows = await db<DbProductHistoryEntry>(PRODUCT_TABLE).distinct('category');
+  const rows = await db<DbProduct>(PRODUCT_TABLE).distinct('category');
   return rows.map((r) => r.category);
 };
 
@@ -342,7 +338,7 @@ export const getAllCategories = async (): Promise<string[]> => {
 export const getSubcatFromCats = async (
   categories: string[],
 ): Promise<Record<string, string[]>> => {
-  const rows = await db<DbProductHistoryEntry>(PRODUCT_TABLE)
+  const rows = await db<DbProduct>(PRODUCT_TABLE)
     .select('category', 'subcategory') // Any subcategory will only ever have one parent category
     .distinct()
     .whereIn('category', categories);

@@ -1,7 +1,7 @@
 import { Knex } from 'knex';
 
-import { DeadProductHistoryEntry, ProductHistoryEntry } from '../models';
-import { DbDeadProductHistoryEntry, DbProductHistoryEntry } from '../models/db';
+import { DeadProductHistoryEntry, Product, ProductHistoryEntry } from '../models';
+import { DbDeadProductHistoryEntry, DbProduct, DbProductHistoryEntry } from '../models/db';
 
 /**
  * Adds a where statement for an interval to a query
@@ -56,65 +56,70 @@ export const addMultipleWhereLikeToQuery = (
 };
 
 /**
- * Select product history coloumn names as camelCase, with optional
- * review information
+ * Select product history coloumn names as camelCase
  * @param query Query from which to select
+ * @param withProductInfo If static product information should be is to be included
  * @param fromTable Table in which `bs_product_article_nbr` is to be taken
- * @param withRank If rank should be selected
- * @param withReview If review information should be selected
  */
 export const selectCamelCaseProductHistory = (
   query: Knex.QueryBuilder,
-  fromTable: string,
-  withRank: boolean,
-  withReview: boolean,
 ) => {
   query
-    .select('url')
-    .select('product_name AS productName')
-    .select('category', 'subcategory')
     .select('unit_volume AS unitVolume')
     .select('unit_price AS unitPrice')
     .select('alcvol', 'apk')
-    .select(`${fromTable}.bs_product_article_nbr AS articleNbr`)
     .select('retrieved_timestamp AS retrievedTimestamp');
-
-  if (withRank) {
-    query.select('rank AS currentRank');
-  }
-
-  if (withReview) {
-    query
-      .select('review_score AS score')
-      .select('review_text AS text')
-      .select('reviewer_name AS reviewerName')
-      .select('review_created_timestamp AS createdTimestamp');
-  }
-};
+}
 
 /**
- * Converts an entry in the database to actual history entry
- * @param dbpr Result from database
+ * Select static product info as camelCase
+ * @param query Query from which to select
+ * @param fromTable Table in which `bs_product_article_nbr` is to be taken
  */
-export const reduceDbPostHistoryEntry = (dbpr: DbProductHistoryEntry): ProductHistoryEntry => {
-  const { retrievedTimestamp, score, text, reviewerName, createdTimestamp, ...reduced } = dbpr;
+export const selectCamelCaseProductInfo = (
+  query: Knex.QueryBuilder,
+  fromTable: string
+  ) => {
+    query.select('url')
+    .select(`${fromTable ?? ''}.bs_product_article_nbr AS articleNbr`)
+    .select('product_name AS productName')
+    .select('category', 'subcategory')
+    .select('rank AS currentRank')
+    .select('review_score AS score')
+    .select('review_text AS text')
+    .select('reviewer_name AS reviewerName')
+    .select('review_created_timestamp AS createdTimestamp');
+  }
 
-  const phe: ProductHistoryEntry = {
-    ...reduced,
-    retrievedDate: new Date(retrievedTimestamp),
-  };
+export const reduceDbProduct = (dp: DbProduct): Product => {
+  const { score, text, reviewerName, createdTimestamp, ...reduced } = dp;
+
+  const p: Product = { ...reduced };
 
   // If review exists, add it
   if (score != null && text != null && reviewerName != null && createdTimestamp != null) {
-    phe.review = {
+    p.review = {
       score,
       text,
       reviewerName,
       createdDate: new Date(createdTimestamp),
     };
-  } else {
-    phe.review = null;
   }
+
+  return p;
+}
+
+/**
+ * Converts an entry in the database to actual history entry
+ * @param dbpr Result from database
+ */
+export const reduceDbProductHistoryEntry = (dbpr: DbProductHistoryEntry): ProductHistoryEntry => {
+  const { retrievedTimestamp, ...reduced } = dbpr;
+
+  const phe: ProductHistoryEntry = {
+    ...reduced,
+    retrievedDate: new Date(retrievedTimestamp),
+  };
 
   return phe;
 };
