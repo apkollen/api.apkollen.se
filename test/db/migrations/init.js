@@ -2,10 +2,15 @@
 exports.up = async function(knex) {
   // This is basically just a copy/paste of `init.sql` in the `bsscraper` repo
   await knex.raw(`
-    CREATE TABLE IF NOT EXISTS "bs_product" (
-        "article_nbr" INTEGER NOT NULL,
-        PRIMARY KEY("article_nbr")
-    )`);
+    CREATE TABLE IF NOT EXISTS bs_product (
+        article_nbr INTEGER NOT NULL,
+        url TEXT NOT NULL,
+        product_name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        subcategory TEXT NOT NULL,
+        PRIMARY KEY(article_nbr)
+    );
+  `);
 
   await knex.raw(`
     CREATE TABLE IF NOT EXISTS "bs_product_review" (
@@ -58,26 +63,24 @@ exports.up = async function(knex) {
   `)
 
   await knex.raw(`
-    CREATE TABLE IF NOT EXISTS "bs_product_history_entry" (
-        "url" TEXT NOT NULL,
-        "product_name" TEXT NOT NULL,
-        "category" TEXT NOT NULL,
-        "subcategory" TEXT NOT NULL,
-        "unit_volume" REAL NOT NULL,
-        "unit_price" REAL NOT NULL,
-        "alcvol" REAL NOT NULL,
-        "apk" REAL NOT NULL,
-        "bs_product_article_nbr" INTEGER NOT NULL,
-        "retrieved_timestamp" INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY("bs_product_article_nbr") REFERENCES "bs_product"("article_nbr"),
-        PRIMARY KEY("bs_product_article_nbr", "retrieved_timestamp")
-    )
+    CREATE TABLE IF NOT EXISTS bs_product_history_entry (
+      unit_volume REAL NOT NULL,
+      unit_price REAL NOT NULL,
+      alcvol REAL NOT NULL,
+      apk REAL NOT NULL,
+      bs_product_article_nbr INTEGER NOT NULL,
+      retrieved_timestamp INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(bs_product_article_nbr) REFERENCES bs_product(article_nbr),
+      PRIMARY KEY(bs_product_article_nbr, retrieved_timestamp)
+  );
 `);
 
   await knex.raw(`
     CREATE VIEW IF NOT EXISTS current_bs_top_list AS
       SELECT *, ROW_NUMBER() OVER(ORDER BY apk DESC) AS rank
       FROM bs_product_history_entry
+      LEFT JOIN bs_product
+      ON bs_product_history_entry.bs_product_article_nbr = bs_product.article_nbr
       WHERE bs_product_article_nbr NOT IN current_dead_bs_product_article_nbr
       GROUP BY bs_product_article_nbr
       HAVING MAX(retrieved_timestamp);
