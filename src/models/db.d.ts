@@ -1,19 +1,20 @@
-import type { ProductHistoryEntry, ProductReview, DeadProductHistoryEntry } from './index';
+import type { Product, ProductHistoryEntry, ProductReview, DeadProductHistoryEntry } from './index';
 
-export type DbProductHistoryEntry = Omit<
-  ProductHistoryEntry,
-  'retrievedDate' | 'markedAsDeadDate' | 'markedAsDead'
-> & {
-  // ISO timestamp
-  retrievedTimestamp: number;
-
-  currentRank?: number;
+export type DbProduct = Omit<Product, 'review' | 'history'> & {
+  currentRank: number;
 
   // From ProductReview
   score?: number;
   text?: string;
   reviewerName?: string;
   createdTimestamp?: number;
+};
+
+export type DbProductHistoryEntry = Omit<ProductHistoryEntry, 'retrievedDate'> & {
+  articleNbr: number;
+
+  // ISO timestamp
+  retrievedTimestamp: number;
 };
 
 export type DbProductReview = Omit<ProductReview, 'createdDate'> & {
@@ -30,4 +31,4 @@ export type DbDeadProductHistoryEntry = {
 export type DbProductCurrentRank = {
   articleNbr: number;
   currentRank: number;
-}
+};
