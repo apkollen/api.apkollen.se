@@ -22,36 +22,36 @@ model BsProduct {
 }
 
 model BsProductHistoryEntry {
-  unitVolume     Float     @map("unit_volume")
-  unitPrice      Float     @map("unit_price")
-  alcvol         Float
-  apk            Float
-  articleNbr     Int       @map("bs_product_article_nbr")
-  retrieved_date DateTime  @default(now())
-  BsProduct      BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  unitVolume    Float     @map("unit_volume")
+  unitPrice     Float     @map("unit_price")
+  alcvol        Float
+  apk           Float
+  articleNbr    Int       @map("bs_product_article_nbr")
+  retrievedDate DateTime  @default(now()) @map("retrieved_date")
+  BsProduct     BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([articleNbr, retrieved_date])
+  @@id([articleNbr, retrievedDate])
   @@map("bs_product_history_entry")
 }
 
 model BsProductReview {
-  articleNbr          Int       @id @default(autoincrement()) @map("bs_product_article_nbr")
-  score               Float     @map("review_score")
-  text                String    @map("review_text")
-  reviewerName        String    @map("reviewer_name")
-  review_created_date DateTime  @default(now())
-  BsProduct           BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  articleNbr        Int       @id @default(autoincrement()) @map("bs_product_article_nbr")
+  score             Float     @map("review_score")
+  text              String    @map("review_text")
+  reviewerName      String    @map("reviewer_name")
+  reviewCreatedDate DateTime  @default(now()) @map("review_created_date")
+  BsProduct         BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("bs_product_review")
 }
 
 model DeadBsProductHistoryEntry {
-  articleNbr          Int       @map("bs_product_article_nbr")
-  marked_dead_date    DateTime  @default(now())
-  marked_revived_date DateTime?
-  BsProduct           BsProduct @relation("bs_productTodead_bs_product_history_entry", fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  articleNbr        Int       @map("bs_product_article_nbr")
+  markedDeadDate    DateTime  @default(now()) @map("marked_dead_date")
+  markedRevivedDate DateTime? @map("marked_revived_date")
+  BsProduct         BsProduct @relation("bs_productTodead_bs_product_history_entry", fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([articleNbr, marked_dead_date])
+  @@id([articleNbr, markedDeadDate])
   @@map("dead_bs_product_history_entry")
 }
 
