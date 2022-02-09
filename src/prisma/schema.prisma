@@ -1,0 +1,51 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model BsProduct {
+  articleNbr                Int                         @id @default(autoincrement()) @map("article_nbr")
+  url                       String
+  productName               String                      @map("product_name")
+  category                  String
+  subcategory               String
+  BsProductHistoryEntry     BsProductHistoryEntry[]
+  BsProductReview           BsProductReview?
+  DeadBsProductHistoryEntry DeadBsProductHistoryEntry[] @relation("bs_productTodead_bs_product_history_entry")
+
+  @@map("bs_product")
+}
+
+model BsProductHistoryEntry {
+  unitVolume          Float     @map("unit_volume")
+  unitPrice           Float     @map("unit_price")
+  alcvol              Float
+  apk                 Float
+  articleNbr          Int       @map("bs_product_article_nbr")
+  retrieved_timestamp Int       @default(dbgenerated("CURRENT_TIMESTAMP"))
+  BsProduct           BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([articleNbr, retrieved_timestamp])
+  @@map("bs_product_history_entry")
+}
+
+model BsProductReview {
+  articleNbr       Int       @id @default(autoincrement()) @map("bs_product_article_nbr")
+  score            Float     @map("review_score")
+  text             String    @map("review_text")
+  reviewerName     String    @map("reviewer_name")
+  createdTimestamp Int       @default(dbgenerated("CURRENT_TIMESTAMP")) @map("review_created_timestamp")
+  BsProduct        BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("bs_product_review")
+}
+
+model DeadBsProductHistoryEntry {
+  articleNbr             Int       @map("bs_product_article_nbr")
+  markedDeadTimestamp    Int       @default(dbgenerated("CURRENT_TIMESTAMP")) @map("marked_dead_timestamp")
+  markedRevivedTimestamp Int?      @map("marked_revived_timestamp")
+  BsProduct              BsProduct @relation("bs_productTodead_bs_product_history_entry", fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([articleNbr, markedDeadTimestamp])
+  @@map("dead_bs_product_history_entry")
+}
