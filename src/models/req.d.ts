@@ -28,20 +28,12 @@ type BaseProductRequest = {
   articleNbr?: number[];
 };
 
-type BaseSearchProductRequest = BaseProductRequest & {
+type SearchProductRequest = BaseProductRequest & {
   maxItems?: number;
   offset?: number;
   sortOrder?: {
     key: keyof Omit<ProductHistoryEntry, 'markedAsDead', 'markedAsDeadDate'>;
     order: 'asc' | 'desc';
   };
+  includeDead: boolean;
 };
-
-export type FullSearchProductRequest = BaseSearchProductRequest & {
-  retrievedDate?: {
-    start?: Date;
-    end?: Date;
-  };
-};
-
-export type TopListSearchProductRequest = BaseSearchProductRequest;

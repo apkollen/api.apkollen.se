@@ -49,6 +49,9 @@ export const baseSearchProductRequestSchema: Schema = {
     isInt: true,
     toInt: true, // Convert to int if possible
   },
+  includeDead: {
+    isBoolean: true,
+  }
 
   // sortOrder is custom chain
 };
