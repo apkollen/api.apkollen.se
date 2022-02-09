@@ -17,15 +17,15 @@ model BsProduct {
 }
 
 model BsProductHistoryEntry {
-  unitVolume          Float     @map("unit_volume")
-  unitPrice           Float     @map("unit_price")
-  alcvol              Float
-  apk                 Float
-  articleNbr          Int       @map("bs_product_article_nbr")
-  retrieved_timestamp Int       @default(dbgenerated("CURRENT_TIMESTAMP"))
-  BsProduct           BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  unitVolume         Float     @map("unit_volume")
+  unitPrice          Float     @map("unit_price")
+  alcvol             Float
+  apk                Float
+  articleNbr         Int       @map("bs_product_article_nbr")
+  retrievedTimestamp Int       @default(dbgenerated("CURRENT_TIMESTAMP")) @map("retrieved_timestamp")
+  BsProduct          BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([articleNbr, retrieved_timestamp])
+  @@id([articleNbr, retrievedTimestamp])
   @@map("bs_product_history_entry")
 }
 
