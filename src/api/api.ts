@@ -22,6 +22,8 @@ import {
   selectCamelCaseProductHistory,
   reduceDbPostHistoryEntry,
   reduceDbDeadPostHistoryEntry,
+  selectCamelCaseProductInfo,
+  reduceDbProduct,
 } from './utils';
 
 /**
@@ -36,10 +38,10 @@ export const searchTopList = async (
   pr: TopListSearchProductRequest,
   debug = false,
 ): Promise<ProductHistoryEntry[]> => {
-  const query = db<DbProductHistoryEntry>(TOP_LIST_VIEW);
+  const query = db<DbProduct>(TOP_LIST_VIEW);
 
   // Now we make selection
-  selectCamelCaseProductHistory(query, TOP_LIST_VIEW, true, true);
+  selectCamelCaseProductInfo(query, TOP_LIST_VIEW);
 
   addMultipleWhereLikeToQuery(query, 'product_name', pr.productName);
 
@@ -96,9 +98,9 @@ export const searchTopList = async (
     query.offset(pr.offset);
   }
 
-  const resRows = (await query.debug(debug)) as DbProductHistoryEntry[];
+  const resRows = (await query.debug(debug)) as DbProduct[];
   const res = resRows.map(
-    (dbpr: DbProductHistoryEntry): ProductHistoryEntry => reduceDbPostHistoryEntry(dbpr),
+    (dbpr: DbProductHistoryEntry): ProductHistoryEntry => reduceDbProduct(dbpr),
   );
 
   return res;
@@ -217,7 +219,7 @@ export const getProductHistory = async (
   articleNbrs: number[],
 ): Promise<Record<number, ProductHistoryResponse>> => {
   const historyQuery = db<DbProductHistoryEntry>(PRODUCT_HISTORY_TABLE);
-  selectCamelCaseProductHistory(historyQuery, PRODUCT_HISTORY_TABLE, false, false);
+  selectCamelCaseProductHistory(historyQuery);
   historyQuery.whereIn('articleNbr', articleNbrs).orderBy('retrievedTimestamp');
 
   const deadHistoryQuery = db<DbDeadProductHistoryEntry>(DEAD_LINK_TABLE)
