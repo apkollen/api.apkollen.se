@@ -33,6 +33,6 @@ export type SearchProductRequest = {
     order: 'asc' | 'desc';
   };
   includeDead: boolean;
-  maxProductHistoryEntries: number;
-  maxDeadProductHistoryEntries: number;
+  maxProductHistoryEntries?: number;
+  maxDeadProductHistoryEntries?: number;
 };
