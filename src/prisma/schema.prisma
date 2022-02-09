@@ -3,6 +3,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator client {
+  provider = "prisma-client-js"
+}
+
 model BsProduct {
   articleNbr                Int                         @id @default(autoincrement()) @map("article_nbr")
   url                       String
@@ -12,6 +16,7 @@ model BsProduct {
   BsProductHistoryEntry     BsProductHistoryEntry[]
   BsProductReview           BsProductReview?
   DeadBsProductHistoryEntry DeadBsProductHistoryEntry[] @relation("bs_productTodead_bs_product_history_entry")
+  CurrentBsProductRank      CurrentBsProductRank[]      @ignore
 
   @@map("bs_product")
 }
@@ -48,4 +53,15 @@ model DeadBsProductHistoryEntry {
 
   @@id([articleNbr, markedDeadTimestamp])
   @@map("dead_bs_product_history_entry")
+}
+
+// Views, to be manually updated
+
+model CurrentBsProductRank {
+  articleNbr  Int       @unique @map("bs_product_article_nbr")
+  currentRank Int       @unique @map("current_rank")
+  BsProduct   BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("current_bs_product_rank")
+  @@ignore
 }
