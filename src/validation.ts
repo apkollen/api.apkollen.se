@@ -52,6 +52,16 @@ export const baseSearchProductRequestSchema: Schema = {
   includeDead: {
     isBoolean: true,
   },
+  maxProductHistoryEntries: {
+    optional: true,
+    isInt: true,
+    toInt: true, // Convert to int if possible
+  },
+  maxDeadProductHistoryEntries: {
+    optional: true,
+    isInt: true,
+    toInt: true, // Convert to int if possible
+  },
 
   // sortOrder is custom chain
 };
