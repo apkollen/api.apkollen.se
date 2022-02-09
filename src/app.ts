@@ -1,7 +1,7 @@
 import express from 'express';
 import { Request, Response } from 'express';
 import cors from 'cors';
-import { FullSearchProductRequest, TopListSearchProductRequest } from './models/req';
+import { SearchProductRequest } from './models/req';
 import {
   getProductReview,
   getProductHistory,
@@ -32,7 +32,7 @@ app.use(
 app.use(express.json());
 
 app.post(
-  '/bs/products/search/current',
+  '/bs/products/search',
   checkSchema(baseSearchProductRequestSchema),
   sortOrderValidationChain,
   async (req: TypedRequestBody<TopListSearchProductRequest>, res: Response) => {
@@ -41,34 +41,10 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const pr: TopListSearchProductRequest = req.body;
+    const pr: SearchProductRequest = req.body;
 
     try {
       const rp = await searchTopList(pr);
-      res.send(rp);
-    } catch (err) {
-      console.error(
-        `Error when trying to handle query ${JSON.stringify(pr)} with error:\n\t`, err
-      );
-      res.sendStatus(500);
-    }
-  },
-);
-
-app.post(
-  '/bs/products/search/all',
-  checkSchema(fullSearchProductRequestSchema),
-  sortOrderValidationChain,
-  async (req: TypedRequestBody<FullSearchProductRequest>, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const pr: FullSearchProductRequest = req.body;
-
-    try {
-      const rp = await searchAllHistoryEntries(pr);
       res.send(rp);
     } catch (err) {
       console.error(
