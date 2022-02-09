@@ -11,15 +11,16 @@ datasource db {
 }
 
 model BsProduct {
-  articleNbr        Int                         @id @default(autoincrement()) @map("article_nbr")
-  url               String
-  productName       String                      @map("product_name")
-  category          String
-  subcategory       String
-  history           BsProductHistoryEntry[]
-  review            BsProductReview?
-  markedDeadHistory DeadBsProductHistoryEntry[] @relation("bs_productTodead_bs_product_history_entry")
-  currentRank       CurrentBsProductRank?
+  articleNbr         Int                          @id @default(autoincrement()) @map("article_nbr")
+  url                String
+  productName        String                       @map("product_name")
+  category           String
+  subcategory        String
+  latestHistoryEntry LatestBsProductHistoryEntry?
+  history            BsProductHistoryEntry[]
+  review             BsProductReview?
+  markedDeadHistory  DeadBsProductHistoryEntry[]  @relation("bs_productTodead_bs_product_history_entry")
+  currentRank        CurrentBsProductRank?
 
   @@map("bs_product")
 }
@@ -66,4 +67,18 @@ model CurrentBsProductRank {
   product     BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("current_bs_product_rank")
+}
+
+// Required for sorting on apk and such
+model LatestBsProductHistoryEntry {
+  unitVolume    Float     @map("unit_volume")
+  unitPrice     Float     @map("unit_price")
+  alcvol        Float
+  apk           Float
+  articleNbr    Int       @unique @map("bs_product_article_nbr")
+  retrievedDate DateTime  @default(now()) @map("retrieved_date")
+  product       BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([articleNbr, retrievedDate])
+  @@map("latest_bs_product_history_entry")
 }
