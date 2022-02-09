@@ -8,15 +8,15 @@ datasource db {
 }
 
 model BsProduct {
-  articleNbr                Int                         @id @default(autoincrement()) @map("article_nbr")
-  url                       String
-  productName               String                      @map("product_name")
-  category                  String
-  subcategory               String
-  BsProductHistoryEntry     BsProductHistoryEntry[]
-  BsProductReview           BsProductReview?
-  DeadBsProductHistoryEntry DeadBsProductHistoryEntry[] @relation("bs_productTodead_bs_product_history_entry")
-  CurrentBsProductRank      CurrentBsProductRank?
+  articleNbr        Int                         @id @default(autoincrement()) @map("article_nbr")
+  url               String
+  productName       String                      @map("product_name")
+  category          String
+  subcategory       String
+  history           BsProductHistoryEntry[]
+  review            BsProductReview?
+  markedDeadHistory DeadBsProductHistoryEntry[] @relation("bs_productTodead_bs_product_history_entry")
+  currentRank       CurrentBsProductRank?
 
   @@map("bs_product")
 }
