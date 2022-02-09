@@ -28,7 +28,7 @@ model BsProductHistoryEntry {
   apk           Float
   articleNbr    Int       @map("bs_product_article_nbr")
   retrievedDate DateTime  @default(now()) @map("retrieved_date")
-  BsProduct     BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  product       BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([articleNbr, retrievedDate])
   @@map("bs_product_history_entry")
@@ -40,7 +40,7 @@ model BsProductReview {
   text              String    @map("review_text")
   reviewerName      String    @map("reviewer_name")
   reviewCreatedDate DateTime  @default(now()) @map("review_created_date")
-  BsProduct         BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  product           BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("bs_product_review")
 }
@@ -49,7 +49,7 @@ model DeadBsProductHistoryEntry {
   articleNbr        Int       @map("bs_product_article_nbr")
   markedDeadDate    DateTime  @default(now()) @map("marked_dead_date")
   markedRevivedDate DateTime? @map("marked_revived_date")
-  BsProduct         BsProduct @relation("bs_productTodead_bs_product_history_entry", fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  product           BsProduct @relation("bs_productTodead_bs_product_history_entry", fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([articleNbr, markedDeadDate])
   @@map("dead_bs_product_history_entry")
@@ -60,7 +60,7 @@ model DeadBsProductHistoryEntry {
 model CurrentBsProductRank {
   articleNbr  Int       @id @map("bs_product_article_nbr")
   currentRank Int       @unique @map("current_rank")
-  BsProduct   BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  product     BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("current_bs_product_rank")
 }
