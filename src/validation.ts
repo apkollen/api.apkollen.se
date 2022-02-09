@@ -51,7 +51,7 @@ export const baseSearchProductRequestSchema: Schema = {
   },
   includeDead: {
     isBoolean: true,
-  }
+  },
 
   // sortOrder is custom chain
 };
@@ -79,7 +79,6 @@ export const sortOrderValidationChain = body('sortOrder')
       'alcvol',
       'apk',
       'articleNbr',
-      'retrievedDate',
     ];
 
     return validKeys.includes(so.key);
