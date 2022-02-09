@@ -16,7 +16,7 @@ model BsProduct {
   BsProductHistoryEntry     BsProductHistoryEntry[]
   BsProductReview           BsProductReview?
   DeadBsProductHistoryEntry DeadBsProductHistoryEntry[] @relation("bs_productTodead_bs_product_history_entry")
-  CurrentBsProductRank      CurrentBsProductRank[]
+  CurrentBsProductRank      CurrentBsProductRank?
 
   @@map("bs_product")
 }
@@ -58,7 +58,7 @@ model DeadBsProductHistoryEntry {
 // Views, to be manually updated
 
 model CurrentBsProductRank {
-  articleNbr  Int       @unique @map("bs_product_article_nbr")
+  articleNbr  Int       @id @map("bs_product_article_nbr")
   currentRank Int       @unique @map("current_rank")
   BsProduct   BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
