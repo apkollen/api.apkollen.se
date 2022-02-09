@@ -1,3 +1,6 @@
+// Do NOT run prisma migration with this schema, it will just
+// mess everything up!
+
 generator client {
   provider = "prisma-client-js"
 }
