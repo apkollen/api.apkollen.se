@@ -7,6 +7,8 @@ const prisma = new PrismaClient({
 });
 class BsProductApi {
   async searchProducts(sr: SearchProductRequest) {
+    // We start by making some dynamic fields
+
     let deathInclusion;
     if (sr.includeDead) {
       deathInclusion = {};
@@ -22,13 +24,16 @@ class BsProductApi {
       };
     }
 
-    let orderBy: {
-      [key: string]:
-        | {
+    // Messy type to make TS happy
+    let orderBy:
+      | {
+          [key: string]: string;
+        }
+      | {
+          [key: string]: {
             [key: string]: string;
-          }
-        | string;
-    };
+          };
+        };
     if (sr.sortOrder?.key == null) {
       // Default sorting is apk for latest history entry
       orderBy = {
@@ -57,7 +62,7 @@ class BsProductApi {
     // undefined values are ignored when query is created,
     // neat AF!
     const res = await prisma.bsProduct.findMany({
-      ...orderBy,
+      orderBy: { ...orderBy },
       take: sr.maxItems,
       skip: sr.offset,
       where: {
@@ -86,6 +91,12 @@ class BsProductApi {
         },
       },
       include: {
+        currentRank: {
+          select: {
+            currentRank: true,
+            articleNbr: false,
+          },
+        },
         history: {
           select: {
             unitVolume: true,
