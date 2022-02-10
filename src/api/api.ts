@@ -1,35 +1,123 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 import { SearchProductRequest } from '../models/req';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: ['query', 'info'],
+});
 class BsProductApi {
   async searchProducts(sr: SearchProductRequest) {
+    let deathInclusion;
+    if (sr.includeDead) {
+      deathInclusion = {};
+    } else {
+      // None where marked revived date is null
+      // date
+      deathInclusion = {
+        markedDeadHistory: {
+          none: {
+            markedRevivedDate: null,
+          },
+        },
+      };
+    }
+
+    let orderBy: {
+      [key: string]:
+        | {
+            [key: string]: string;
+          }
+        | string;
+    };
+    if (sr.sortOrder?.key == null) {
+      // Default sorting is apk for latest history entry
+      orderBy = {
+        latestHistoryEntry: {
+          apk: 'desc',
+        },
+      };
+    } else if (
+      sr.sortOrder?.key === 'productName' ||
+      sr.sortOrder?.key === 'category' ||
+      sr.sortOrder?.key === 'subcategory' ||
+      sr.sortOrder?.key === 'articleNbr'
+    ) {
+      // We order by static product info
+      orderBy = {};
+      orderBy[sr.sortOrder.key] = sr.sortOrder.order;
+    } else {
+      // We order by latest history entry
+      // Default sorting is apk for latest history entry
+      orderBy = {
+        latestHistoryEntry: {},
+      };
+      orderBy.latestHistoryEntry[sr.sortOrder.key] = sr.sortOrder.order;
+    }
+
+    // undefined values are ignored when query is created,
+    // neat AF!
     const res = await prisma.bsProduct.findMany({
+      ...orderBy,
+      take: sr.maxItems,
+      skip: sr.offset,
       where: {
-        OR: [
-          { category: 'Öl & Cider' },
-        ]
+        ...deathInclusion,
+        productName: { contains: sr.productName },
+        category: { in: sr.category },
+        subcategory: { in: sr.subcategory },
+        latestHistoryEntry: {
+          unitVolume: {
+            gte: sr.unitVolume?.min,
+            lte: sr.unitVolume?.max,
+          },
+          unitPrice: {
+            gte: sr.unitPrice?.min,
+            lte: sr.unitPrice?.max,
+          },
+          alcvol: {
+            gte: sr.alcvol?.min,
+            lte: sr.alcvol?.max,
+          },
+          apk: {
+            gte: sr.apk?.min,
+            lte: sr.apk?.max,
+          },
+          articleNbr: { in: sr.articleNbr },
+        },
       },
       include: {
         history: {
           select: {
+            unitVolume: true,
+            unitPrice: true,
+            alcvol: true,
             apk: true,
+            articleNbr: false, // We don't want duplicate information
             retrievedDate: true,
-          }
+          },
+          take: sr.maxDeadProductHistoryEntries,
+          orderBy: {
+            retrievedDate: 'desc',
+          },
+        },
+        markedDeadHistory: {
+          select: {
+            articleNbr: false, // No duplicate
+            markedDeadDate: true,
+            markedRevivedDate: true,
+          },
+          take: sr.maxDeadProductHistoryEntries,
+          orderBy: {
+            markedDeadDate: 'desc',
+          },
         },
       },
-      orderBy: {
-        latestHistoryEntry: {
-          apk: 'asc'
-        }
-      }
     });
     console.log(JSON.stringify(res));
   }
 }
 
 const api = new BsProductApi();
-api.searchProducts({ category: ['hello'], includeDead: false });
+api.searchProducts({ category: ['Öl & Cider'], includeDead: false });
 
 export default BsProductApi;
