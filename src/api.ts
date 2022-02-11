@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { stringify } from 'querystring';
 
 import { SearchProductRequest } from './models/req';
+import { FullHistoryResponse, SearchProductResponse } from './models/res';
 
 const prisma = new PrismaClient();
 class BsProductApi {
@@ -11,7 +11,7 @@ class BsProductApi {
    * related to price.
    * @param sr
    */
-  async searchProducts(sr: SearchProductRequest) {
+  async searchProducts(sr: SearchProductRequest): Promise<SearchProductResponse[]> {
     // We start by making some dynamic fields
 
     let deathInclusion;
@@ -140,6 +140,46 @@ class BsProductApi {
     });
 
     return reducedRes;
+  }
+
+  /**
+   * Find full APK history, and when product was marked dead
+   * @param articleNbr 
+   */
+  async getFullHistory(articleNbr: number): Promise<FullHistoryResponse> {
+    const [history, markedDeadHistory] = await Promise.all([
+      prisma.bsProductHistoryEntry.findMany({
+        select: {
+          unitVolume: true,
+          unitPrice: true,
+          alcvol: true,
+          apk: true,
+          articleNbr: false, // We don't want duplicate information
+          retrievedDate: true,
+        },
+        where: {
+          articleNbr,
+        },
+        orderBy: {
+          retrievedDate: 'desc',
+        },
+      }),
+      prisma.deadBsProductHistoryEntry.findMany({
+        select: {
+          articleNbr: false, // No duplicate
+          markedDeadDate: true,
+          markedRevivedDate: true,
+        },
+        where: {
+          articleNbr,
+        },
+        orderBy: {
+          markedDeadDate: 'desc',
+        },
+      }),
+    ]);
+
+    return { history, markedDeadHistory };
   }
 
   /**
