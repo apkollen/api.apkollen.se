@@ -1,9 +1,16 @@
 import { PrismaClient } from '@prisma/client';
+import { stringify } from 'querystring';
 
 import { SearchProductRequest } from './models/req';
 
 const prisma = new PrismaClient();
 class BsProductApi {
+  /**
+   * Searches for products matching the search
+   * query, using the latest history entry for values
+   * related to price.
+   * @param sr
+   */
   async searchProducts(sr: SearchProductRequest) {
     // We start by making some dynamic fields
 
@@ -129,10 +136,58 @@ class BsProductApi {
       return {
         ...reduced,
         currentRank: currentRank?.currentRank,
-      }
-    })
+      };
+    });
 
     return reducedRes;
+  }
+
+  /**
+   * Returns count of products, either including
+   * those currently marked as dead or not
+   * @param includeDead If products currently marked as dead should be
+   * included or not
+   */
+  async getProductCount(includeDead: boolean): Promise<number> {
+    if (includeDead) {
+      return prisma.bsProduct.count();
+    } else {
+      return prisma.bsProduct.count({
+        where: {
+          markedDeadHistory: {
+            none: {
+              markedRevivedDate: null,
+            },
+          },
+        },
+      });
+    }
+  }
+
+  /**
+   * Finds all categories and subcategories ever used by a product
+   * in the DB, using categories as keys for lists of subcategories
+   */
+  async getAllCategories(): Promise<Record<string, string[]>> {
+    const res = await prisma.bsProduct.findMany({
+      select: {
+        category: true,
+        subcategory: true,
+      },
+      distinct: ['subcategory'],
+    });
+
+    // Reduce result
+    return res.reduce((acc, row) => {
+      // If category not in record, create the key
+      if (!acc[row.category]) {
+        acc[row.category] = [];
+      }
+
+      acc[row.category].push(row.subcategory);
+
+      return acc;
+    }, {} as Record<string, string[]>);
   }
 }
 

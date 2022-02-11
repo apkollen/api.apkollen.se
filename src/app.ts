@@ -1,15 +1,16 @@
+import cors from 'cors';
 import express from 'express';
 import { Request, Response } from 'express';
-import cors from 'cors';
-import { SearchProductRequest } from './models/req';
-import BsProductApi from './api';
-import { searchProductRequestSchema, sortOrderValidationChain } from './validation';
 import { body, checkSchema, validationResult } from 'express-validator';
+
+import BsProductApi from './api';
+import { SearchProductRequest } from './models/req';
+import { searchProductRequestSchema, sortOrderValidationChain } from './validation';
 
 if (process.env.NODE_ENV !== 'test') console.log('Starting startup...');
 
 interface TypedRequestBody<T> extends Request {
-  body: T
+  body: T;
 }
 
 const app = express();
@@ -38,126 +39,57 @@ app.post(
     try {
       res.send(await api.searchProducts(sr));
     } catch (err) {
+      console.error(`Error when trying to handle query ${JSON.stringify(sr)} with error:\n\t`, err);
+      res.sendStatus(500);
+    }
+  },
+);
+
+app.get(
+  '/bs/products/history/:articleNbr',
+  async (req: TypedRequestBody<{ articleNbrs: number[] }>, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { articleNbrs } = req.body;
+
+    try {
+      const histories = await getProductHistory(articleNbrs);
+      res.send(histories);
+    } catch (err) {
       console.error(
-        `Error when trying to handle query ${JSON.stringify(sr)} with error:\n\t`, err
+        `Error when trying to handle history query ${JSON.stringify(articleNbrs)} with error:\n\t`,
+        err,
       );
       res.sendStatus(500);
     }
   },
 );
 
-// app.post(
-//   '/bs/products/history',
-//   body('articleNbrs').exists().isArray().notEmpty(),
-//   async (req: TypedRequestBody<{ articleNbrs: number[] }>, res: Response) => {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({ errors: errors.array() });
-//     }
+app.get('/bs/products/count', (_, res) => {
+  Promise.all([api.getProductCount(false), api.getProductCount(true)])
+    .then(([current, all]) => {
+      res.send({
+        current,
+        all,
+      });
+    })
+    .catch((err) => {
+      console.log('Error when trying to get current product count', err);
+      res.sendStatus(500);
+    });
+});
 
-//     const { articleNbrs } = req.body;
-
-//     try {
-//       const histories = await getProductHistory(articleNbrs);
-//       res.send(histories);
-//     } catch (err) {
-//       console.error(
-//         `Error when trying to handle history query ${JSON.stringify(
-//           articleNbrs,
-//         )} with error:\n\t`, err
-//       );
-//       res.sendStatus(500);
-//     }
-//   },
-// );
-
-// app.post(
-//   '/bs/products/review',
-//   body('articleNbrs').exists().isArray().notEmpty(),
-//   async (req: TypedRequestBody<{ articleNbrs: number[] }>, res: Response) => {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({ errors: errors.array() });
-//     }
-
-//     const { articleNbrs } = req.body;
-
-//     try {
-//       const reviews = await getProductReview(articleNbrs);
-//       res.send(reviews);
-//     } catch (err) {
-//       console.error(
-//         `Error when trying to handle review query ${JSON.stringify(
-//           articleNbrs,
-//         )} with error:\n\t`, err
-//       );
-//       res.sendStatus(500);
-//     }
-//   },
-// );
-
-// app.post(
-//   '/bs/products/rank',
-//   body('articleNbrs').exists().isArray().notEmpty(),
-//   async (req: TypedRequestBody<{ articleNbrs: number[] }>, res: Response) => {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({ errors: errors.array() });
-//     }
-
-//     const { articleNbrs } = req.body;
-
-//     try {
-//       const ranks = await getCurrentProductRank(articleNbrs);
-//       res.send(ranks);
-//     } catch (err) {
-//       console.error(
-//         `Error when trying to handle rank query ${JSON.stringify(
-//           articleNbrs,
-//         )} with error:\n\t`, err
-//       );
-//       res.sendStatus(500);
-//     }
-//   },
-// );
-
-// app.get('/bs/products/count', (_, res) => {
-//   getCurrentProductCount()
-//     .then((count) => res.send([count]))
-//     .catch((err) => {
-//       console.error(`Error when trying to handle get of count with error:\n\t`, err);
-//       res.sendStatus(500);
-//     });
-// });
-
-// app.get('/bs/categories', (_, res) => {
-//   getAllCategories()
-//     .then((categories) => res.send(categories))
-//     .catch((err) => {
-//       console.error(`Error when getting categories:\n\t`, err);
-//       res.send(500);
-//     });
-// });
-
-// app.post(
-//   '/bs/subcategories',
-//   body('categories').isArray().notEmpty(),
-//   async (req: TypedRequestBody<{ categories: string[] }>, res: Response) => {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({ errors: errors.array() });
-//     }
-
-//     const { categories } = req.body;
-
-//     try {
-//       const subcategories = await getSubcatFromCats(categories);
-//       res.send(subcategories);
-//     } catch (err) {
-//       console.error(`Error when getting subcategories:\n\t`, err);
-//       res.send(500);
-//     }
-//   },
-// );
+app.get('/bs/categories', (_, res) => {
+  api
+    .getAllCategories()
+    .then((categories) => res.send(categories))
+    .catch((err) => {
+      console.error(`Error when getting categories:\n\t`, err);
+      res.send(500);
+    });
+});
 
 export default app;
