@@ -3,5 +3,5 @@
 -- for looking at the top 10
 
 wrk.method = "POST"
-wrk.body = '{"productName":["a","e"],"unitVolume":{"max":34},"sortOrder":{"key":"productName","order":"asc"},"maxItems":10}'
+wrk.body = '{"productName":"e","unitVolume":{"max":34},"sortOrder":{"key":"productName","order":"asc"},"maxItems":10,"includeDead":false}'
 wrk.headers["Content-Type"] = "application/json"
