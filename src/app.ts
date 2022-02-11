@@ -1,7 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import { Request, Response } from 'express';
-import { body, checkSchema, validationResult } from 'express-validator';
+import { checkSchema, validationResult } from 'express-validator';
 
 import BsProductApi from './api';
 import { SearchProductRequest } from './models/req';
@@ -45,28 +45,25 @@ app.post(
   },
 );
 
-app.get(
-  '/bs/products/history/:articleNbr',
-  async (req: TypedRequestBody<{ articleNbrs: number[] }>, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { articleNbrs } = req.body;
-
-    try {
-      const histories = await getProductHistory(articleNbrs);
-      res.send(histories);
-    } catch (err) {
-      console.error(
-        `Error when trying to handle history query ${JSON.stringify(articleNbrs)} with error:\n\t`,
-        err,
-      );
-      res.sendStatus(500);
-    }
-  },
-);
+app.get('/bs/products/history/:articleNbr', (req, res: Response) => {
+  const articleNbr = Number.parseInt(req.params.articleNbr);
+  if (!Number.isSafeInteger(articleNbr)) {
+    res.sendStatus(400);
+  } else {
+    api
+      .getFullHistory(articleNbr)
+      .then((h) => {
+        res.send(h);
+      })
+      .catch((err) => {
+        console.error(
+          `Error when trying to handle history query for product ${articleNbr} with error:\n\t`,
+          err,
+        );
+        res.sendStatus(500);
+      });
+  }
+});
 
 app.get('/bs/products/count', (_, res) => {
   Promise.all([api.getProductCount(false), api.getProductCount(true)])
