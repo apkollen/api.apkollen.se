@@ -49,9 +49,9 @@ export const searchProductRequestSchema: Schema = {
     isInt: true,
     toInt: true, // Convert to int if possible
   },
-  // includeDead: {
-  //   isBoolean: true,
-  // },
+  includeDead: {
+    isBoolean: true,
+  },
   maxProductHistoryEntries: {
     optional: true,
     isInt: true,
