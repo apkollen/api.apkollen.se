@@ -1,10 +1,8 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 import { SearchProductRequest } from '../models/req';
 
-const prisma = new PrismaClient({
-  log: ['query', 'info'],
-});
+const prisma = new PrismaClient();
 class BsProductApi {
   async searchProducts(sr: SearchProductRequest) {
     // We start by making some dynamic fields
@@ -124,7 +122,17 @@ class BsProductApi {
         },
       },
     });
-    console.log(JSON.stringify(res));
+
+    // Ensure currentRank is only number, not double object
+    const reducedRes = res.map((p) => {
+      const { currentRank, ...reduced } = p;
+      return {
+        ...reduced,
+        currentRank: currentRank?.currentRank,
+      }
+    })
+
+    return reducedRes;
   }
 }
 
