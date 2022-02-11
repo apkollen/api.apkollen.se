@@ -136,7 +136,4 @@ class BsProductApi {
   }
 }
 
-const api = new BsProductApi();
-api.searchProducts({ category: ['Öl & Cider'], includeDead: false });
-
 export default BsProductApi;

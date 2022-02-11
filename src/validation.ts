@@ -10,7 +10,7 @@ import { body } from 'express-validator';
 const baseProductRequestSchema: Schema = {
   productName: {
     optional: true,
-    isArray: true,
+    isString: true,
   },
   category: {
     optional: true,
@@ -37,7 +37,7 @@ const baseProductRequestSchema: Schema = {
   },
 };
 
-export const baseSearchProductRequestSchema: Schema = {
+export const searchProductRequestSchema: Schema = {
   ...baseProductRequestSchema,
   maxItems: {
     optional: true,
@@ -49,9 +49,9 @@ export const baseSearchProductRequestSchema: Schema = {
     isInt: true,
     toInt: true, // Convert to int if possible
   },
-  includeDead: {
-    isBoolean: true,
-  },
+  // includeDead: {
+  //   isBoolean: true,
+  // },
   maxProductHistoryEntries: {
     optional: true,
     isInt: true,
@@ -106,19 +106,3 @@ export const sortOrderValidationChain = body('sortOrder')
     return validOrder.includes(so.order);
   })
   .withMessage('sortOrder order must either be "asc" or "desc"');
-
-export const fullSearchProductRequestSchema: Schema = {
-  ...baseProductRequestSchema,
-  includeMarkedAsDead: {
-    optional: true,
-    isBoolean: true,
-  },
-  'retrievedDate.start': {
-    optional: true,
-    isDate: true,
-  },
-  'retrievedDate.end': {
-    optional: true,
-    isDate: true,
-  },
-};
