@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-import { SearchProductRequest } from '../models/req';
+import { SearchProductRequest } from './models/req';
 
 const prisma = new PrismaClient();
 class BsProductApi {
