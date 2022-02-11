@@ -4,6 +4,7 @@
   "description": "APKollens tredje(!) backend",
   "main": "src/index.ts",
   "author": "Emil Eriksson <emil@fsfe.org>",
+  "license": "MPL-2.0",
   "scripts": {
     "dev": "nodemon -e ts --watch src --exec \"node --nolazy --inspect -r ts-node/register src/index.ts\"",
     "prettier-format": "prettier --config .prettierrc \"src/**/*.ts\" \"test/**/*.ts\" --write",
