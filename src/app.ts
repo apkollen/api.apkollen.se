@@ -36,7 +36,6 @@ app.post(
     const sr: SearchProductRequest = req.body;
 
     try {
-      console.log(sr);
       res.send(await api.searchProducts(sr));
     } catch (err) {
       console.error(
