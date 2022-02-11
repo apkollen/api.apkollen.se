@@ -2,7 +2,7 @@ import express from 'express';
 import { Request, Response } from 'express';
 import cors from 'cors';
 import { SearchProductRequest } from './models/req';
-import BsProductApi from './api/api';
+import BsProductApi from './api';
 import { searchProductRequestSchema, sortOrderValidationChain } from './validation';
 import { body, checkSchema, validationResult } from 'express-validator';
 
