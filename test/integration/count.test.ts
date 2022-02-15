@@ -18,10 +18,9 @@ describe('getting product count', () => {
   const r = request(app);
 
   it('returns correct number of live products', async () => {
-    const res = await r.get(BASE_ROUTE);
+    const res = await r.get(BASE_ROUTE).expect(200);
     const body = res.body as Record<string, number>
 
-    expect(res.statusCode).toEqual(200);
     expect(body.current).toEqual(KNOWN_COUNT.current);
     expect(body.all).toEqual(KNOWN_COUNT.all);
   });

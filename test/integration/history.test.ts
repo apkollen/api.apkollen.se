@@ -27,9 +27,7 @@ describe('getting product history', () => {
   });
 
   it('returns empty history for non-existant articleNbr', async () => {
-    const res = await r.get(`${BASE_ROUTE}/666`);
-
-    expect(res.statusCode).toEqual(200);
+    const res = await r.get(`${BASE_ROUTE}/666`).expect(200);
 
     const fhr = res.body as FullHistoryResponse;
 
@@ -40,7 +38,7 @@ describe('getting product history', () => {
   });
 
   it('sorts history based on retrieval date', async () => {
-    const res = await r.get(`${BASE_ROUTE}/${KNOWN_HISTORY.articleNbr}`);
+    const res = await r.get(`${BASE_ROUTE}/${KNOWN_HISTORY.articleNbr}`).expect(200);
 
     const fhr = res.body as FullHistoryResponse;
 
@@ -58,9 +56,7 @@ describe('getting product history', () => {
   });
 
   it('returns valid history for valid articleNbr', async () => {
-    const res = await r.get(`${BASE_ROUTE}/${KNOWN_HISTORY.articleNbr}`);
-
-    expect(res.statusCode).toEqual(200);
+    const res = await r.get(`${BASE_ROUTE}/${KNOWN_HISTORY.articleNbr}`).expect(200);
 
     const fhr = res.body as FullHistoryResponse;
 

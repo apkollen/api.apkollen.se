@@ -19,10 +19,9 @@ describe('getting categories', () => {
   const CATEGORIES = Object.keys(KNOWN_CATEGORIES);
 
   it('returns correct categories', async () => {
-    const res = await r.get(BASE_ROUTE);
+    const res = await r.get(BASE_ROUTE).expect(200);
     const body = res.body as Record<string, string[]>;
 
-    expect(res.statusCode).toEqual(200);
     expect(Object.keys(body)).toHaveLength(CATEGORIES.length);
     expect(Object.keys(body)).toEqual(expect.arrayContaining(CATEGORIES));
 
