@@ -1,72 +1,69 @@
 import app from '../../src/app';
-import db from '../../src/db';
-import { ProductHistoryResponse } from '../../src/models/res';
+import { FullHistoryResponse } from '../../src/models/res';
 
 import request = require('supertest');
-import { DeadProductHistoryEntry, ProductHistoryEntry } from '../../src/models';
 
 const BASE_ROUTE = '/bs/products/history';
 
-const KNOWN_HISTORY = [
-  {
-    articleNbr: 2110205,
-    name: 'Harboe Viiking Strong Beer 12,0%',
-    historyLength: 1,
-    markedDeadHistoryLength: 0,
-  },
-  {
-    articleNbr: 2033433,
-    name: 'Harboe Bear Beer Strong 7,7%',
-    historyLength: 7,
-    markedDeadHistoryLength: 1,
-  },
-];
-
-beforeAll(async () => {
-  // Setup in-memory DB
-  await db.migrate.latest();
-  await db.seed.run();
-});
+const KNOWN_HISTORY = {
+  articleNbr: 2033433,
+  historyLength: 7,
+  markedDeadHistoryLength: 1,
+};
 
 describe('getting product history', () => {
   const r = request(app);
 
-  it('fails with 400 without articleNbrs', async () => {
-    await r.post(BASE_ROUTE).send({}).expect(400);
+  it('fails with 404 without articleNbr', async () => {
+    await r.get(`${BASE_ROUTE}/`).expect(404);
   });
+
+  it('returns 400 for invalid articleNbr', async () => {
+    await r.get(`${BASE_ROUTE}/not-a-number`).expect(400);
+  })
 
   it('returns for valid article number', async () => {
-    const res = await r.post(BASE_ROUTE).send({ articleNbrs: [KNOWN_HISTORY[0].articleNbr] });
-
-    expect(res.statusCode).toEqual(200);
+    await r.get(`${BASE_ROUTE}/${KNOWN_HISTORY.articleNbr}`).expect(200);
   });
 
-  it('returns multiple histories of valid lengths, even with invalid articleNbr', async () => {
-    const res = await r
-      .post(BASE_ROUTE)
-      .send({ articleNbrs: [...KNOWN_HISTORY.map((h) => h.articleNbr), 666] });
+  it('returns empty history for non-existant articleNbr', async () => {
+    const res = await r.get(`${BASE_ROUTE}/666`);
 
-    const resBody = res.body as Record<number, ProductHistoryResponse>;
+    expect(res.statusCode).toEqual(200);
 
-    // Response has correct number of entries
-    expect(Object.keys(resBody)).toHaveLength(Object.keys(KNOWN_HISTORY).length);
+    const fhr = res.body as FullHistoryResponse;
 
-    expect(resBody[666]).toBeUndefined();
+    expect(fhr).not.toBeNull();
+    expect(Object.keys(fhr)).toHaveLength(2);
+    expect(fhr.history).toHaveLength(0);
+    expect(fhr.markedDeadHistory).toHaveLength(0)
+  });
 
-    KNOWN_HISTORY.forEach((kh) => {
-      const a = kh.articleNbr;
-      const history: ProductHistoryEntry[] = resBody[a].history;
-      const markedDeadHistory: DeadProductHistoryEntry[] = resBody[a].markedDeadHistory;
+  it('returns valid history for valid articleNbr', async () => {
+    const res = await r.get(`${BASE_ROUTE}/${KNOWN_HISTORY.articleNbr}`);
 
-      expect(history).toHaveLength(kh.historyLength);
-      expect(markedDeadHistory).toHaveLength(kh.markedDeadHistoryLength);
+    expect(res.statusCode).toEqual(200);
 
-      // Name and articleNbr same for all history entries for
-      // this product
-      history.forEach((h) => {
-        expect(kh.name).toEqual(h.productName);
-        expect(kh.articleNbr).toEqual(h.articleNbr);
-      })
+    const fhr = res.body as FullHistoryResponse;
+
+    expect(fhr).not.toBeNull();
+    expect(Object.keys(fhr)).toHaveLength(2);
+    expect(fhr.history).toHaveLength(KNOWN_HISTORY.historyLength);
+    expect(fhr.markedDeadHistory).toHaveLength(KNOWN_HISTORY.markedDeadHistoryLength)
+
+    // Check validity of death history
+    expect(Object.keys(fhr.markedDeadHistory[0])).toHaveLength(2);
+    expect(fhr.markedDeadHistory[0].markedRevivedDate).not.toBeNull();
+    expect(fhr.markedDeadHistory[0].markedRevivedDate).not.toBeNull();
+
+    // Check validity of history
+    fhr.history.forEach((e) => {
+      expect(Object.keys(e)).toHaveLength(5);
+      expect(e.alcvol).not.toBeNull();
+      expect(e.apk).not.toBeNull();
+      expect(e.retrievedDate).not.toBeNull();
+      expect(e.unitPrice).not.toBeNull();
+      expect(e.unitVolume).not.toBeNull();
     });
   });
 });
