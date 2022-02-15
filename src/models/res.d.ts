@@ -1,17 +1,31 @@
-import { ProductHistoryEntry, DeadProductHistoryEntry } from './index';
-
 /**
- * Represents the history response for a single product.
- * This includes all retrievals, as well as when the product
- * was marked as dead.
+ * These are generally inferred by Refactor in VSCode
  */
-export type ProductHistoryResponse = {
-  /**
-   * Represents the search response, but does not include
-   * information about if products was marked dead. This
-   * can either be done with a request specifying all responses
-   * to be alive, or by using a `ProductHistoryResponse`
-   */
-  history: ProductHistoryEntry[];
-  markedDeadHistory: DeadProductHistoryEntry[];
+
+export type SearchProductResponse = {
+  currentRank: number | undefined;
+  articleNbr: number;
+  url: string;
+  productName: string;
+  category: string;
+  subcategory: string;
+  markedDeadHistory: { markedDeadDate: Date; markedRevivedDate: Date | null }[];
+  history: {
+    apk: number;
+    unitVolume: number;
+    unitPrice: number;
+    alcvol: number;
+    retrievedDate: Date;
+  }[];
+};
+
+export type FullHistoryResponse = {
+  history: {
+    unitVolume: number;
+    unitPrice: number;
+    alcvol: number;
+    apk: number;
+    retrievedDate: Date;
+  }[];
+  markedDeadHistory: { markedDeadDate: Date; markedRevivedDate: Date | null }[];
 };
