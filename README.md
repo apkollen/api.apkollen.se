@@ -1,4 +1,4 @@
-# apkapi3 - APKollen.se backend
+# apkapi-ts - APKollen.se backend
 
 _For Swedish version, see [README.swe.md](./README.swe.md)_
 
