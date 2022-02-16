@@ -1,4 +1,4 @@
-# apkapi3 - APKollen.se backend
+# apkapi-ts - APKollen.se backend
 
 Detta är repot för [APKollen.se](https://apkollen.se)s backend - Universums studentikosastes prisjämförigstjänst
 och det ultimata verktyget för att jämföra hela BorderShoppens sortiment!
