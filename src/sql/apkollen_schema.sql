@@ -70,7 +70,7 @@ CREATE VIEW IF NOT EXISTS latest_bs_product_history_entry AS
 
 -- Only one non-revived per product
 CREATE TRIGGER IF NOT EXISTS single_non_revived_dead_bs_product
-    BEFORE INSERT ON dead_bs_product_history_entry
+BEFORE INSERT ON dead_bs_product_history_entry
     WHEN EXISTS (
         SELECT bs_product_article_nbr
         FROM dead_bs_product_history_entry
@@ -80,7 +80,7 @@ CREATE TRIGGER IF NOT EXISTS single_non_revived_dead_bs_product
 BEGIN
     -- The rest of the transaction (other dead products) may be
     -- valid, so we only rollback this statement with abort
-    SELECT RAISE(ABORT, 'Only one non-revived entry per article')
+    SELECT RAISE(ABORT, 'Only one non-revived entry per article');
 END;
 
 -- If a product is retrieved, it cannot be marked as dead
@@ -93,5 +93,17 @@ BEGIN
     WHERE dead_bs_product_history_entry.bs_product_article_nbr = NEW.bs_product_article_nbr
     AND dead_bs_product_history_entry.marked_revived_date IS NULL;
 END;
+
+-- ###########
+-- # Indexes #
+-- ###########
+
+-- Since updating these are rare and batched, we can afford indexing
+
+DROP INDEX IF EXISTS idx_products;
+CREATE INDEX idx_products ON bs_product(product_name, category, subcategory);
+
+DROP INDEX IF EXISTS idx_product_histories;
+CREATE INDEX IF NOT EXISTS idx_product_histories ON bs_product_history_entry(unit_volume, unit_price, alcvol, apk);
 
 END TRANSACTION;
