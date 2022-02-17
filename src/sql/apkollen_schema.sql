@@ -71,19 +71,16 @@ CREATE VIEW IF NOT EXISTS latest_bs_product_history_entry AS
 -- Only one non-revived per product
 CREATE TRIGGER IF NOT EXISTS single_non_revived_dead_bs_product
     BEFORE INSERT ON dead_bs_product_history_entry
+    WHEN EXISTS (
+        SELECT bs_product_article_nbr
+        FROM dead_bs_product_history_entry
+        WHERE dead_bs_product_history_entry.bs_product_article_nbr = NEW.bs_product_article_nbr
+        AND marked_revived_date IS NULL
+    )
 BEGIN
-    SELECT
-        CASE
-            WHEN 
-                EXISTS (
-                    SELECT bs_product_article_nbr
-                    FROM dead_bs_product_history_entry
-                    WHERE dead_bs_product_history_entry.bs_product_article_nbr = NEW.bs_product_article_nbr
-                    AND marked_revived_date IS NULL
-                )
-            THEN
-                RAISE (ABORT, 'Only one non-revived entry per article')
-            END;
+    -- The rest of the transaction (other dead products) may be
+    -- valid, so we only rollback this statement with abort
+    SELECT RAISE(ABORT, 'Only one non-revived entry per article')
 END;
 
 -- If a product is retrieved, it cannot be marked as dead
