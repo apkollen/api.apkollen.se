@@ -100,10 +100,19 @@ END;
 
 -- Since updating these are rare and batched, we can afford indexing
 
-DROP INDEX IF EXISTS idx_products;
-CREATE INDEX idx_products ON bs_product(product_name, category, subcategory);
+-- Searches are made directly on names
+DROP INDEX IF EXISTS idx_product_names;
+CREATE INDEX idx_product_names ON bs_product(product_name);
 
-DROP INDEX IF EXISTS idx_product_histories;
-CREATE INDEX IF NOT EXISTS idx_product_histories ON bs_product_history_entry(unit_volume, unit_price, alcvol, apk);
+DROP INDEX IF EXISTS idx_product_categories;
+CREATE INDEX idx_product_categories ON bs_product(category, subcategory);
+
+-- APK is default sorting and often used (including by ranking),
+-- so important index
+DROP INDEX IF EXISTS idx_product_history_apk;
+CREATE INDEX IF NOT EXISTS idx_product_history_apk ON bs_product_history_entry(apk);
+
+DROP INDEX IF EXISTS idx_product_history_misc;
+CREATE INDEX IF NOT EXISTS idx_product_histories ON bs_product_history_entry(alcvol, unit_volume, unit_price);
 
 END TRANSACTION;
