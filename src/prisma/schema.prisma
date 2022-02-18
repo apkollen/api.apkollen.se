@@ -22,6 +22,7 @@ model BsProduct {
   markedDeadHistory  DeadBsProductHistoryEntry[]  @relation("bs_productTodead_bs_product_history_entry")
   currentRank        CurrentBsProductRank?
 
+  @@index([productName, category, subcategory])
   @@map("bs_product")
 }
 
@@ -35,6 +36,7 @@ model BsProductHistoryEntry {
   product       BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([articleNbr, retrievedDate])
+  @@index([unitVolume, unitPrice, alcvol, apk])
   @@map("bs_product_history_entry")
 }
 
