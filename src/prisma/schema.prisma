@@ -1,5 +1,5 @@
 // Do NOT run prisma migration with this schema, it will just
-// mess everything up!
+// mess everything up! Comments found in `src/sql/apkollen_schema.sql`
 
 generator client {
   provider = "prisma-client-js"
@@ -22,7 +22,8 @@ model BsProduct {
   markedDeadHistory  DeadBsProductHistoryEntry[]  @relation("bs_productTodead_bs_product_history_entry")
   currentRank        CurrentBsProductRank?
 
-  @@index([productName, category, subcategory])
+  @@index([productName])
+  @@index([category, subcategory])
   @@map("bs_product")
 }
 
@@ -36,7 +37,8 @@ model BsProductHistoryEntry {
   product       BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([articleNbr, retrievedDate])
-  @@index([unitVolume, unitPrice, alcvol, apk])
+  @@index([apk])
+  @@index([alcvol, unitVolume, unitPrice])
   @@map("bs_product_history_entry")
 }
 
