@@ -1,6 +1,3 @@
-// Do NOT run prisma migration with this schema, it will just
-// mess everything up! Comments found in `src/sql/apkollen_schema.sql`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,34 +8,36 @@ datasource db {
 }
 
 model BsProduct {
-  articleNbr         Int                          @id @default(autoincrement()) @map("article_nbr")
-  url                String
-  productName        String                       @map("product_name")
-  category           String
-  subcategory        String
-  latestHistoryEntry LatestBsProductHistoryEntry?
-  history            BsProductHistoryEntry[]
-  review             BsProductReview?
-  markedDeadHistory  DeadBsProductHistoryEntry[]  @relation("bs_productTodead_bs_product_history_entry")
-  currentRank        CurrentBsProductRank?
+  articleNbr             Int                         @id @default(autoincrement()) @map("article_nbr")
+  url                    String
+  productName            String                      @map("product_name")
+  category               String
+  subcategory            String
+  latestHistoryEntryDate DateTime?                   @map("latest_history_entry_date")
+  latestHistoryEntry     BsProductHistoryEntry?      @relation("bs_product_article_nbr_latest_history_entry_dateTobs_product_history_entry", fields: [articleNbr, latestHistoryEntryDate], references: [articleNbr, retrievedDate], onDelete: NoAction, onUpdate: NoAction)
+  history                BsProductHistoryEntry[]
+  review                 BsProductReview?
+  markedDeadHistory      DeadBsProductHistoryEntry[] @relation("bs_productTodead_bs_product_history_entry")
+  currentRank            CurrentBsProductRank?
 
-  @@index([productName])
-  @@index([category, subcategory])
+  @@index([category, subcategory], map: "idx_product_categories")
+  @@index([productName], map: "idx_product_names")
   @@map("bs_product")
 }
 
 model BsProductHistoryEntry {
-  unitVolume    Float     @map("unit_volume")
-  unitPrice     Float     @map("unit_price")
-  alcvol        Float
-  apk           Float
-  articleNbr    Int       @map("bs_product_article_nbr")
-  retrievedDate DateTime  @default(now()) @map("retrieved_date")
-  product       BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  unitVolume                                                                            Float       @map("unit_volume")
+  unitPrice                                                                             Float       @map("unit_price")
+  alcvol                                                                                Float
+  apk                                                                                   Float
+  articleNbr                                                                            Int         @map("bs_product_article_nbr")
+  retrievedDate                                                                         DateTime    @default(now()) @map("retrieved_date")
+  product                                                                               BsProduct   @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  bs_product_bs_product_article_nbr_latest_history_entry_dateTobs_product_history_entry BsProduct[] @relation("bs_product_article_nbr_latest_history_entry_dateTobs_product_history_entry") /// Unused, required internally by prisma
 
   @@id([articleNbr, retrievedDate])
-  @@index([apk])
-  @@index([alcvol, unitVolume, unitPrice])
+  @@index([alcvol, unitVolume, unitPrice], map: "idx_product_histories")
+  @@index([apk], map: "idx_product_history_apk")
   @@map("bs_product_history_entry")
 }
 
@@ -66,23 +65,9 @@ model DeadBsProductHistoryEntry {
 // Views, to be manually updated
 
 model CurrentBsProductRank {
-  articleNbr  Int       @id @map("bs_product_article_nbr")
-  currentRank Int       @unique @map("current_rank")
-  product     BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
+  articleNbr  Int        @id @map("bs_product_article_nbr")
+  currentRank Int        @unique @map("current_rank")
+  product     BsProduct? @relation(fields: [articleNbr], references: [articleNbr])
 
   @@map("current_bs_product_rank")
-}
-
-// Required for sorting on apk and such
-model LatestBsProductHistoryEntry {
-  unitVolume    Float     @map("unit_volume")
-  unitPrice     Float     @map("unit_price")
-  alcvol        Float
-  apk           Float
-  articleNbr    Int       @unique @map("bs_product_article_nbr")
-  retrievedDate DateTime  @default(now()) @map("retrieved_date")
-  product       BsProduct @relation(fields: [articleNbr], references: [articleNbr], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([articleNbr, retrievedDate])
-  @@map("latest_bs_product_history_entry")
 }
