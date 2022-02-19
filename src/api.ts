@@ -96,6 +96,7 @@ class BsProductApi {
         },
       },
       include: {
+        latestHistoryEntry: false, // Would be duplicate
         currentRank: {
           select: {
             currentRank: true,

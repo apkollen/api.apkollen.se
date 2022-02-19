@@ -9,6 +9,7 @@ export type SearchProductResponse = {
   productName: string;
   category: string;
   subcategory: string;
+  latestHistoryEntryDate: Date | null;
   markedDeadHistory: { markedDeadDate: Date; markedRevivedDate: Date | null }[];
   history: {
     apk: number;
