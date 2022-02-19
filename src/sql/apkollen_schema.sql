@@ -8,7 +8,10 @@ CREATE TABLE IF NOT EXISTS bs_product (
     product_name TEXT NOT NULL,
     category TEXT NOT NULL,
     subcategory TEXT NOT NULL,
-    PRIMARY KEY(article_nbr)
+    latest_history_entry_date DATETIME,
+    PRIMARY KEY(article_nbr),
+    FOREIGN KEY(article_nbr, latest_history_entry_date)
+    REFERENCES bs_product_history_entry(bs_product_article_nbr, retrieved_date)
 );
 
 CREATE TABLE IF NOT EXISTS bs_product_review (
@@ -58,15 +61,18 @@ CREATE VIEW IF NOT EXISTS current_bs_product_rank AS
     GROUP BY bs_product_article_nbr
     HAVING MAX(retrieved_date);
 
-CREATE VIEW IF NOT EXISTS latest_bs_product_history_entry AS
-    SELECT *
-    FROM bs_product_history_entry
-    GROUP BY bs_product_article_nbr
-    HAVING MAX(retrieved_date);
-
 -- ############
 -- # Triggers #
 -- ############
+
+-- Products should always reference latest history entry retrieval date
+CREATE TRIGGER IF NOT EXISTS bs_product_latest_retrieval
+AFTER INSERT ON bs_product_history_entry
+BEGIN
+    UPDATE bs_product
+    SET latest_history_entry_date = NEW.retrieved_date
+    WHERE bs_product.article_nbr = NEW.bs_product_article_nbr;
+END;
 
 -- Only one non-revived per product
 CREATE TRIGGER IF NOT EXISTS single_non_revived_dead_bs_product
