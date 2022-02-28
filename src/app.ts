@@ -7,7 +7,12 @@ import BsProductApi from './api';
 import { SearchProductRequest } from './models/req';
 import { searchProductRequestSchema, sortOrderValidationChain } from './validation';
 
-if (process.env.NODE_ENV !== 'test') console.log('Starting startup...');
+import createTracer from './tracer';
+
+if (process.env.NODE_ENV !== 'test') {
+  console.log('Starting startup...')
+  createTracer();
+};
 
 interface TypedRequestBody<T> extends Request {
   body: T;
