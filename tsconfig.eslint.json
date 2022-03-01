@@ -2,6 +2,7 @@
   "include": [
     "src/**/*.ts",
     "test/**/*.ts",
-    "test/**/*.js"
+    "test/**/*.js",
+    "telemetry/**/*.js"
   ]
 }
