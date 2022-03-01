@@ -2,7 +2,7 @@
 'use strict';
 
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
-const { OTLPTraceExporter } = require('@opentelemetry/exporter-otlp-grpc');
+const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-grpc');
 const { NodeSDK } = require('@opentelemetry/sdk-node');
 
 const traceExporter = new OTLPTraceExporter();
