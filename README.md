@@ -18,3 +18,9 @@ npm run build
 # To run with telemetry
 pm2 start build/index.js -- -r ./telemetry/tracer.js
 ```
+
+## Telemetry
+
+To provide nice statistics about usage, the OpenTelemetry API is used.
+Simply run with the above command, using proper `.env`, and run something
+like a `SigNoz` server locally.
