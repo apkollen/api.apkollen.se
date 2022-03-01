@@ -9,9 +9,18 @@
     "dev": "nodemon -e ts --watch src --exec \"node --nolazy --inspect -r ts-node/register src/index.ts\"",
     "prettier-format": "prettier --config .prettierrc \"src/**/*.ts\" \"test/**/*.ts\" --write",
     "test": "jest",
-    "prisma:generate": "prisma generate --schema=src/prisma/schema.prisma"
-  },
+    "prisma:generate": "prisma generate --schema=src/prisma/schema.prisma",
+    "build": "npm run prisma:generate && tsc"
+    },
   "dependencies": {
+    "@opentelemetry/api": "^1.0.3",
+    "@opentelemetry/auto-instrumentations-node": "^0.25.0",
+    "@opentelemetry/exporter-collector": "0.25.0",
+    "@opentelemetry/exporter-collector-grpc": "^0.25.0",
+    "@opentelemetry/exporter-otlp-grpc": "^0.26.0",
+    "@opentelemetry/sdk-node": "^0.27.0",
+    "@opentelemetry/sdk-trace-base": "^1.0.1",
+    "@opentelemetry/sdk-trace-node": "^1.0.1",
     "@prisma/client": "^3.9.1",
     "cors": "^2.8.5",
     "express": "^4.17.2",
