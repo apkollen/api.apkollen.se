@@ -67,7 +67,7 @@ CREATE VIEW IF NOT EXISTS current_bs_product_rank AS
 
 -- Products should always reference latest history entry retrieval date
 CREATE TRIGGER IF NOT EXISTS bs_product_latest_retrieval
-AFTER INSERT ON bs_product_history_entry
+    AFTER INSERT ON bs_product_history_entry
 BEGIN
     UPDATE bs_product
     SET latest_history_entry_date = NEW.retrieved_date
@@ -76,7 +76,7 @@ END;
 
 -- Only one non-revived per product
 CREATE TRIGGER IF NOT EXISTS single_non_revived_dead_bs_product
-BEFORE INSERT ON dead_bs_product_history_entry
+    BEFORE INSERT ON dead_bs_product_history_entry
     WHEN EXISTS (
         SELECT bs_product_article_nbr
         FROM dead_bs_product_history_entry
