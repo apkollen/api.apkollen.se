@@ -91,7 +91,7 @@ END;
 
 -- If a product is retrieved, it cannot be marked as dead
 CREATE TRIGGER IF NOT EXISTS revive_bs_product_on_retrieval
-    BEFORE INSERT ON bs_product_history_entry
+    AFTER INSERT ON bs_product_history_entry
     WHEN NEW.bs_product_article_nbr IN current_dead_bs_product_article_nbr
 BEGIN
     UPDATE dead_bs_product_history_entry
