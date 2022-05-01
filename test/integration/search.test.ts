@@ -11,6 +11,8 @@ const KNOWN_TOTAL_PRODUCT_AMOUNT = 6;
 
 describe('searching the top list', () => {
   const r = request(app);
+  
+  const LATEST_HISTORY_ENTRY_DATE = new Date('2022-01-19T21:58:49.000Z');
 
   // Should return only viiking
   const SPECIFIC_SEARCH_EXPECTED_RESULT: SearchProductResponse = {
@@ -20,11 +22,12 @@ describe('searching the top list', () => {
     productName: 'Harboe Viiking Strong Beer 12,0%',
     category: 'Öl & Cider',
     subcategory: 'Dansk Öl',
+    latestHistoryEntryDate: LATEST_HISTORY_ENTRY_DATE,
     history: [
       {
         alcvol: 12,
         apk: 9.324009324009324,
-        retrievedDate: new Date('2022-01-19T21:58:49.000Z'),
+        retrievedDate: LATEST_HISTORY_ENTRY_DATE,
         unitPrice: 4.25,
         unitVolume: 33,
       },
@@ -79,6 +82,9 @@ describe('searching the top list', () => {
     const spr = res.body as SearchProductResponse[];
 
     if (spr[0] != null) {
+      // Make latestHistoryEntryDate an actual date
+      spr[0].latestHistoryEntryDate = new Date(spr[0].latestHistoryEntryDate ?? 0);
+
       // Make retrievedDate actual date
       spr[0].history = spr[0].history.map((h) => {
         const { retrievedDate, ...reduced } = h;
@@ -180,5 +186,47 @@ describe('searching for all products', () => {
     const sortedCopy = spr.slice().sort((a, b) => a.productName.localeCompare(b.productName));
 
     expect(spr).toStrictEqual(sortedCopy);
+  });
+
+  it('limits history in search when requested', async () => {
+    let res = await r
+      .post(BASE_ROUTE)
+      .send({ articleNbr: [2033433], includeDead: false, maxProductHistoryEntries: 2 })
+      .expect(200);
+
+    let spr = res.body as SearchProductResponse[];
+
+    expect(spr).toHaveLength(1);
+    expect(spr[0].history).toHaveLength(2);
+
+    // Now without limit
+    res = await r.post(BASE_ROUTE).send({ articleNbr: [2033433], includeDead: false });
+
+    // Bear beer should have more than two history entries
+    spr = res.body as SearchProductResponse[];
+
+    expect(spr).toHaveLength(1);
+    expect(spr[0].history).not.toHaveLength(2);
+  });
+
+  it('limits marked dead history in search when requested', async () => {
+    let res = await r
+      .post(BASE_ROUTE)
+      .send({ articleNbr: [2033433], includeDead: false, maxDeadProductHistoryEntries: 1 })
+      .expect(200);
+
+    let spr = res.body as SearchProductResponse[];
+
+    expect(spr).toHaveLength(1);
+    expect(spr[0].markedDeadHistory).toHaveLength(1);
+
+    // Now without limit
+    res = await r.post(BASE_ROUTE).send({ articleNbr: [2033433], includeDead: false });
+
+    // Bear beer should have more than two history entries
+    spr = res.body as SearchProductResponse[];
+
+    expect(spr).toHaveLength(1);
+    expect(spr[0].markedDeadHistory).not.toHaveLength(1);
   });
 });

@@ -112,7 +112,7 @@ class BsProductApi {
             articleNbr: false, // We don't want duplicate information
             retrievedDate: true,
           },
-          take: sr.maxDeadProductHistoryEntries,
+          take: sr.maxProductHistoryEntries,
           orderBy: {
             retrievedDate: 'desc',
           },
