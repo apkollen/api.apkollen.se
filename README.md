@@ -1,5 +1,6 @@
-![license](https://img.shields.io/github/license/apkollen/api.apkollen.se) ![version](https://img.shields.io/github/package-json/v/apkollen/api.apkollen.se)
 # apkapi-ts - APKollen.se backend
+
+[![License](https://img.shields.io/github/license/apkollen/api.apkollen.se)](https://github.com/apkollen/api.apkollen.se/blob/main/LICENSE) [![Version](https://img.shields.io/github/package-json/v/apkollen/api.apkollen.se)](https://github.com/apkollen/api.apkollen.se/blob/main/package.json)
 
 _For Swedish version, see [README.swe.md](./README.swe.md)_
 
