@@ -1,3 +1,19 @@
+/**
+ * Copyright 2022 Emil Jonathan Eriksson
+ *
+ *
+ * This file is part of apkapi-ts.
+ *
+ * apkapi-ts is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, version 3.
+ *
+ * apkapi-ts is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with apkapi-ts.
+ * If not, see <https://www.gnu.org/licenses/>.
+ */
 import { PrismaClient } from '@prisma/client';
 
 import { SearchProductRequest } from './models/req';
@@ -145,7 +161,7 @@ class BsProductApi {
 
   /**
    * Find full APK history, and when product was marked dead
-   * @param articleNbr 
+   * @param articleNbr
    */
   async getFullHistory(articleNbr: number): Promise<FullHistoryResponse> {
     const [history, markedDeadHistory] = await Promise.all([
